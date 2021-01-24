@@ -26,12 +26,18 @@
             android:inputType="numberDecimal" />
 
         <Button
-            android:id="@+id/weight_button"
+            android:id="@+id/save_weight_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Ok" />
+            android:text="Save" />
 
     </LinearLayout>
+
+    <Button
+        android:id="@+id/load_weight_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Load" />
 
 </LinearLayout>

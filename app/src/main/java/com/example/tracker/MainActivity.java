@@ -10,10 +10,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,11 +34,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final EditText weightEditText = findViewById(R.id.weight_edit_text);
-        Button weightButton = findViewById(R.id.weight_button);
+        Button saveWeightButton = findViewById(R.id.save_weight_button);
+        Button loadWeightButton = findViewById(R.id.load_weight_button);
 
         db = FirebaseFirestore.getInstance();
 
-        weightButton.setOnClickListener(new View.OnClickListener() {
+        saveWeightButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String weightString = weightEditText.getText().toString();
@@ -45,6 +50,13 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
                 }
+            }
+        });
+
+        loadWeightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                readWeights();
             }
         });
     }
@@ -68,6 +80,23 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(FIRESTORE_LOG_TAG, "Error adding document", e);
+                    }
+                });
+    }
+
+    private void readWeights() {
+        db.collection("weights")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
+                        }
                     }
                 });
     }
