@@ -60,7 +60,10 @@ public class MainActivity extends AppCompatActivity {
                 String weightString = weightEditText.getText().toString();
                 if (weightString != null && !weightString.isEmpty()) {
                     double weight = Double.parseDouble(weightString);
-                    saveWeight(db, System.currentTimeMillis(), weight);
+                    long currentTimeMillis = System.currentTimeMillis();
+                    String date = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(new Date(currentTimeMillis));
+                    String time = new SimpleDateFormat("HH:mm", Locale.GERMANY).format(new Date(currentTimeMillis));
+                    saveWeight(db, date, time, weight);
                     Toast.makeText(getApplicationContext(), weightString, Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
@@ -76,15 +79,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void saveWeight(FirebaseFirestore db, long currentTimeMillis, double weightKgs) {
+    private void saveWeight(FirebaseFirestore db, String date, String time, double weightKgs) {
         // Create a map of the object to save
-        Map<String, Object> user = new HashMap<>();
-        user.put("time in milliseconds", currentTimeMillis);
-        user.put("weight in kilograms", weightKgs);
+        Map<String, Object> weight = new HashMap<>();
+        weight.put("date", date);
+        weight.put("time", time);
+        weight.put("weight in kilograms", weightKgs);
 
         // Add a new document with a generated ID
         db.collection("weights")
-                .add(user)
+                .add(weight)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
@@ -108,9 +112,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                long timeInMillis = (long) document.getData().get("time in milliseconds");
+                                String date = (String) document.getData().get("date");
+                                String time = (String) document.getData().get("time");
                                 double weightInKgs = (double) document.getData().get("weight in kilograms");
-                                adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
+                                adapter.weights.add(new WeightDto(date, time, weightInKgs));
                                 Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
                             }
                             adapter.notifyDataSetChanged();
@@ -122,19 +127,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class WeightDto {
-        private final static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
-        private final long timeInMillis;
+        private final String date;
+        private final String time;
         private final double weightInKgs;
 
-        public WeightDto(long timeInMillis, double weightInKgs) {
-            this.timeInMillis = timeInMillis;
+        public WeightDto(String date, String time, double weightInKgs) {
+            this.date = date;
+            this.time = time;
             this.weightInKgs = weightInKgs;
         }
 
         public String getDateString() {
-            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, Locale.GERMANY);
-            return formatter.format(new Date(timeInMillis));
+            return date + " " + time;
         }
 
         public String getWeightString() {
