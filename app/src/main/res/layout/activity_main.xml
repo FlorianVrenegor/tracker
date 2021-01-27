@@ -40,6 +40,11 @@
         android:layout_height="wrap_content"
         android:text="Load" />
 
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"/>
+
     <ListView
         android:id="@+id/weight_list_view"
         android:layout_width="match_parent"
