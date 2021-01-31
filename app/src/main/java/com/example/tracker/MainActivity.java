@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                 if (weightString != null && !weightString.isEmpty()) {
                     double weight = Double.parseDouble(weightString);
 
-                    long currentTimeMillis = System.currentTimeMillis();
+                    long currentTimeMillis = System.currentTimeMillis() + 3600000;
 
                     saveWeight(db, currentTimeMillis, weight);
 
