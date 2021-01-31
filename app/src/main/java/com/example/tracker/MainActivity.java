@@ -71,14 +71,8 @@ public class MainActivity extends AppCompatActivity {
                     double weight = Double.parseDouble(weightString);
 
                     long currentTimeMillis = System.currentTimeMillis();
-                    Date currentDate = new Date(currentTimeMillis);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(currentDate);
-                    int week = cal.get(Calendar.WEEK_OF_YEAR);
-                    String date = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(currentDate);
-                    String time = new SimpleDateFormat("HH:mm", Locale.GERMANY).format(currentDate);
 
-                    saveWeight(db, week, date, time, weight);
+                    saveWeight(db, currentTimeMillis, weight);
 
                     Toast.makeText(getApplicationContext(), weightString, Toast.LENGTH_LONG).show();
                 } else {
@@ -190,12 +184,10 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    private void saveWeight(FirebaseFirestore db, int week, String date, String time, double weightKgs) {
+    private void saveWeight(FirebaseFirestore db, long timeInMillis, double weightKgs) {
         // Create a map of the object to save
         Map<String, Object> weight = new HashMap<>();
-        weight.put("week", week);
-        weight.put("date", date);
-        weight.put("time", time);
+        weight.put("timeInMillis", timeInMillis);
         weight.put("weight in kilograms", weightKgs);
 
         // Add a new document with a generated ID
@@ -224,13 +216,13 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                int week = Math.toIntExact((long) document.getData().get("week"));
-                                String date = (String) document.getData().get("date");
-                                String time = (String) document.getData().get("time");
+                                long timeInMillis = (long) document.getData().get("timeInMillis");
                                 double weightInKgs = (double) document.getData().get("weight in kilograms");
-                                adapter.weights.add(new WeightDto(week, date, time, weightInKgs));
+                                adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
                                 Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
                             }
+//                            Collections.sort(adapter.weights, (w1, w2) -> w1.getTimeInMillis() > w2.getTimeInMillis());
+//                            adapter.weights.sort();
                             adapter.notifyDataSetChanged();
                         } else {
                             Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
@@ -240,15 +232,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class WeightDto {
+        private final long timeInMillis;
         private final int week;
         private final String date;
-        private final String time;
         private final double weightInKgs;
 
-        public WeightDto(int week, String date, String time, double weightInKgs) {
-            this.week = week;
-            this.date = date;
-            this.time = time;
+        public WeightDto(long timeInMillis, double weightInKgs) {
+            this.timeInMillis = timeInMillis;
+
+            Date date = new Date(timeInMillis);
+            this.date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.GERMANY).format(date);
+
+            Calendar calendar = Calendar.getInstance(Locale.GERMANY);
+            calendar.setTime(date);
+            this.week = calendar.get(Calendar.WEEK_OF_YEAR);
+
+
             this.weightInKgs = weightInKgs;
         }
 
@@ -256,8 +255,12 @@ public class MainActivity extends AppCompatActivity {
             return week;
         }
 
-        public String getDateString() {
-            return date + " " + time;
+        public long getTimeInMillis() {
+            return timeInMillis;
+        }
+
+        public String getDate() {
+            return date;
         }
 
         public String getWeightString() {
@@ -295,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
             WeightDto item = getItem(position);
 
-            ((TextView) result.findViewById(R.id.date_text_view)).setText(item.getDateString());
+            ((TextView) result.findViewById(R.id.date_text_view)).setText(item.getDate());
             ((TextView) result.findViewById(R.id.weight_text_view)).setText(item.getWeightString());
 
             return result;
