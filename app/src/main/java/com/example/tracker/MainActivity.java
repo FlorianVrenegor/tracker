@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 String weightString = weightEditText.getText().toString();
                 if (weightString != null && !weightString.isEmpty()) {
                     double weight = Double.parseDouble(weightString);
+
                     long currentTimeMillis = System.currentTimeMillis();
                     Date currentDate = new Date(currentTimeMillis);
                     Calendar cal = Calendar.getInstance();
@@ -76,7 +77,9 @@ public class MainActivity extends AppCompatActivity {
                     int week = cal.get(Calendar.WEEK_OF_YEAR);
                     String date = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(currentDate);
                     String time = new SimpleDateFormat("HH:mm", Locale.GERMANY).format(currentDate);
+
                     saveWeight(db, week, date, time, weight);
+
                     Toast.makeText(getApplicationContext(), weightString, Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
@@ -141,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter(new ValueFormatter() {
-            final String[] days = new String[] {"Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"};
+            final String[] days = new String[]{"Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"};
 
             @Override
             public String getFormattedValue(float value) {
@@ -158,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
         yVals.add(new Entry(5f, 83.5f));
         yVals.add(new Entry(6f, 82.5f));
         yVals.add(new Entry(7f, 81.5f));
+
         LineDataSet dataSet = new LineDataSet(yVals, "Weights");
         LineData lineData = new LineData(dataSet);
 //        lineChart.setXAxisRenderer();
@@ -174,6 +178,16 @@ public class MainActivity extends AppCompatActivity {
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
         lineChart.setData(lineData);
+    }
+
+    private List<WeightDto> getWeightsForWeek(int week) {
+        List<WeightDto> result = new ArrayList<>();
+        for (WeightDto w : adapter.weights) {
+            if (w.week == week) {
+                result.add(w);
+            }
+        }
+        return result;
     }
 
     private void saveWeight(FirebaseFirestore db, int week, String date, String time, double weightKgs) {
