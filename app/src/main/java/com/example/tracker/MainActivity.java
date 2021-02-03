@@ -1,10 +1,14 @@
 package com.example.tracker;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -13,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -35,6 +40,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +68,41 @@ public class MainActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         adapter = new WeightAdapter();
         weightListView.setAdapter(adapter);
+        weightListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final WeightDto weight = adapter.weights.get(position);
+                Toast.makeText(getApplicationContext(), weight.getWeightString(), Toast.LENGTH_LONG).show();
+
+                AlertDialog.Builder adb=new AlertDialog.Builder(MainActivity.this);
+                adb.setTitle("Delete?");
+                adb.setMessage("Are you sure you want to delete " + position);
+                final int positionToRemove = position; // needs to be final to be accessed in the onClick method below
+                adb.setNegativeButton("Cancel", null);
+                adb.setPositiveButton("Ok", new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        db.collection("weights").document(weight.timeInMillis + "_" + weight.weightInKgs)
+                                .delete()
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!");
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(FIRESTORE_LOG_TAG, "Error deleting document", e);
+                                    }
+                                });
+                        adapter.weights.remove(positionToRemove);
+                        adapter.notifyDataSetChanged();
+                    }});
+                adb.show();
+
+                return false;
+            }
+        });
 
         saveWeightButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,11 +111,20 @@ public class MainActivity extends AppCompatActivity {
                 if (weightString != null && !weightString.isEmpty()) {
                     double weight = Double.parseDouble(weightString);
 
-                    long currentTimeMillis = System.currentTimeMillis() + 3600000;
+                    long currentTimeMillis = System.currentTimeMillis();
+
+                    WeightDto weightDto = new WeightDto(currentTimeMillis, weight);
+                    adapter.weights.add(weightDto);
+                    Collections.sort(adapter.weights, Collections.<WeightDto>reverseOrder());
+                    adapter.notifyDataSetChanged();
 
                     saveWeight(db, currentTimeMillis, weight);
 
-                    Toast.makeText(getApplicationContext(), weightString, Toast.LENGTH_LONG).show();
+                    weightEditText.setText("");
+
+                    // Hide keyboard
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 } else {
                     Toast.makeText(getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
                 }
@@ -90,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
         readWeights();
 
-        setupLineChart();
+//        setupLineChart();
     }
 
     private void setupLineChart() {
@@ -190,13 +240,15 @@ public class MainActivity extends AppCompatActivity {
         weight.put("timeInMillis", timeInMillis);
         weight.put("weight in kilograms", weightKgs);
 
+        final String documentId = timeInMillis + "_" + weightKgs;
+
         // Add a new document with a generated ID
-        db.collection("weights")
-                .add(weight)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+        db.collection("weights").document(documentId)
+                .set(weight)
+                .addOnSuccessListener(new OnSuccessListener() {
                     @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                    public void onSuccess(Object o) {
+                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + documentId);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -221,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
                                 adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
                                 Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
                             }
-//                            Collections.sort(adapter.weights, (w1, w2) -> w1.getTimeInMillis() > w2.getTimeInMillis());
+                            Collections.sort(adapter.weights, Collections.<WeightDto>reverseOrder());
 //                            adapter.weights.sort();
                             adapter.notifyDataSetChanged();
                         } else {
@@ -231,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    class WeightDto {
+    class WeightDto implements Comparable<WeightDto> {
         private final long timeInMillis;
         private final int week;
         private final String date;
@@ -265,6 +317,15 @@ public class MainActivity extends AppCompatActivity {
 
         public String getWeightString() {
             return weightInKgs + " kg";
+        }
+
+        @Override
+        public int compareTo(WeightDto o) {
+            if (o == null) {
+                return 0;
+            }
+            long result = getTimeInMillis() - o.getTimeInMillis();
+            return result < 0 ? -1 : result == 0 ? 0 : 1;
         }
     }
 
