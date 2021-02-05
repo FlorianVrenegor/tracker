@@ -17,6 +17,11 @@ import androidx.fragment.app.Fragment;
 
 public class TimeFragment extends Fragment {
 
+    private boolean running = false;
+
+    private TextView timerTextView;
+    private EditText timerEditText;
+
     public TimeFragment() {
         super(R.layout.fragment_time);
     }
@@ -37,54 +42,71 @@ public class TimeFragment extends Fragment {
         secondsNumberPicker.setMaxValue(59);
         secondsNumberPicker.setMinValue(0);
 
-        final EditText timerEditText = view.findViewById(R.id.timer_edit_text);
-        final TextView timerTextView = view.findViewById(R.id.timer_text_view);
+        timerEditText = view.findViewById(R.id.timer_edit_text);
+        timerTextView = view.findViewById(R.id.timer_text_view);
         Button timerButton = view.findViewById(R.id.timer_button);
         timerButton.setOnClickListener(new View.OnClickListener() {
-            private boolean running = false;
 
             @Override
             public void onClick(View v) {
-                if (timerEditText.getText().toString().equals("")) {
-                    Toast.makeText(getContext(), "Bitte Beschreibung eintragen", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
                 long hours = hoursNumberPicker.getValue() * 60 * 60 * 1000;
                 long minutes = minutesNumberPicker.getValue() * 60 * 1000;
                 long seconds = secondsNumberPicker.getValue() * 1000;
-
                 long milliseconds = hours + minutes + seconds;
 
-                if (!running) {
-                    running = true;
-                    new CountDownTimer(milliseconds, 1000) {
-
-                        public void onTick(long millisUntilFinished) {
-                            long seconds = millisUntilFinished / 1000;
-                            long minutes = seconds / 60;
-                            long hours = minutes / 60;
-
-                            String secondsFormatted = String.format("%02d", seconds % 60);
-                            String minutesFormatted = String.format("%02d", minutes % 60);
-                            String hoursFormatted = String.format("%02d:", hours % 24);
-
-                            timerTextView.setText(hoursFormatted + minutesFormatted + ":" + secondsFormatted);
-                        }
-
-                        public void onFinish() {
-                            Vibrator v = (Vibrator) getActivity().getSystemService(getContext().VIBRATOR_SERVICE);
-                            long[] pattern = {0, 300, 300, 300};
-                            v.vibrate(VibrationEffect.createWaveform(pattern, -1)); // VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-
-                            timerTextView.setText("Done!");
-                            running = false;
-
-                            Toast.makeText(getContext(), timerEditText.getText(), Toast.LENGTH_LONG).show();
-                        }
-                    }.start();
-                }
+                startTimer(milliseconds);
             }
         });
+
+        Button fifteenMinuteButton = view.findViewById(R.id.fifteen_min_button);
+        fifteenMinuteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTimer(15 * 60 * 1000);
+            }
+        });
+        Button thirtyMinuteButton = view.findViewById(R.id.thirty_min_button);
+        thirtyMinuteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startTimer(30 * 60 * 1000);
+            }
+        });
+    }
+
+    private void startTimer (long milliseconds) {
+        if (timerEditText.getText().toString().equals("")) {
+            Toast.makeText(getContext(), "Bitte Beschreibung eintragen", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (!running) {
+            running = true;
+            new CountDownTimer(milliseconds, 1000) {
+
+                public void onTick(long millisUntilFinished) {
+                    long seconds = millisUntilFinished / 1000;
+                    long minutes = seconds / 60;
+                    long hours = minutes / 60;
+
+                    String secondsFormatted = String.format("%02d", seconds % 60);
+                    String minutesFormatted = String.format("%02d", minutes % 60);
+                    String hoursFormatted = String.format("%02d:", hours % 24);
+
+                    timerTextView.setText(hoursFormatted + minutesFormatted + ":" + secondsFormatted);
+                }
+
+                public void onFinish() {
+                    Vibrator v = (Vibrator) getActivity().getSystemService(getContext().VIBRATOR_SERVICE);
+                    long[] pattern = {0, 300, 300, 300};
+                    v.vibrate(VibrationEffect.createWaveform(pattern, -1)); // VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+
+                    timerTextView.setText("Done!");
+                    running = false;
+
+                    Toast.makeText(getContext(), timerEditText.getText(), Toast.LENGTH_LONG).show();
+                }
+            }.start();
+        }
     }
 }

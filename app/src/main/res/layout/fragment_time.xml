@@ -59,6 +59,24 @@
         android:text="00:00:00"
         android:textSize="40sp" />
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/fifteen_min_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15 Min" />
+
+        <Button
+            android:id="@+id/thirty_min_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="30 Min" />
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/timer_button"
         android:layout_width="wrap_content"
