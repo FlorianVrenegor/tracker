@@ -1,14 +1,12 @@
 package com.example.tracker;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,13 +26,10 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -62,84 +57,62 @@ public class WeightFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        final EditText weightEditText = getView().findViewById(R.id.weight_edit_text);
-        Button saveWeightButton = getView().findViewById(R.id.save_weight_button);
-        Button loadWeightButton = getView().findViewById(R.id.load_weight_button);
-        ListView weightListView = getView().findViewById(R.id.weight_list_view);
+
+        final EditText weightEditText = view.findViewById(R.id.weight_edit_text);
+        Button saveWeightButton = view.findViewById(R.id.save_weight_button);
+        Button loadWeightButton = view.findViewById(R.id.load_weight_button);
+        ListView weightListView = view.findViewById(R.id.weight_list_view);
 
         db = FirebaseFirestore.getInstance();
         adapter = new WeightAdapter();
         weightListView.setAdapter(adapter);
-        weightListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                final WeightDto weight = adapter.weights.get(position);
-                Toast.makeText(getActivity().getApplicationContext(), weight.getWeightString(), Toast.LENGTH_LONG).show();
+        weightListView.setOnItemLongClickListener((parent, view1, position, id) -> {
+            final WeightDto weight = adapter.weights.get(position);
+            Toast.makeText(getActivity().getApplicationContext(), weight.getWeightString(), Toast.LENGTH_LONG).show();
 
-                AlertDialog.Builder adb = new AlertDialog.Builder(getActivity());
-                adb.setTitle("Delete?");
-                adb.setMessage("Are you sure you want to delete " + position);
-                final int positionToRemove = position; // needs to be final to be accessed in the onClick method below
-                adb.setNegativeButton("Cancel", null);
-                adb.setPositiveButton("Ok", new AlertDialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        db.collection("weights").document(weight.timeInMillis + "_" + weight.weightInKgs)
-                                .delete()
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!");
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.w(FIRESTORE_LOG_TAG, "Error deleting document", e);
-                                    }
-                                });
-                        adapter.weights.remove(positionToRemove);
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-                adb.show();
+            AlertDialog.Builder adb = new AlertDialog.Builder(getActivity());
+            adb.setTitle("Delete?");
+            adb.setMessage("Are you sure you want to delete " + position);
+            final int positionToRemove = position; // needs to be final to be accessed in the onClick method below
+            adb.setNegativeButton("Cancel", null);
+            adb.setPositiveButton("Ok", (dialog, which) -> {
+                db.collection("weights").document(weight.timeInMillis + "_" + weight.weightInKgs)
+                        .delete()
+                        .addOnSuccessListener(aVoid -> Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!"))
+                        .addOnFailureListener(e -> Log.w(FIRESTORE_LOG_TAG, "Error deleting document", e));
+                adapter.weights.remove(positionToRemove);
+                adapter.notifyDataSetChanged();
+            });
+            adb.show();
 
-                return false;
+            return false;
+        });
+
+        saveWeightButton.setOnClickListener(view12 -> {
+            String weightString = weightEditText.getText().toString();
+            if (weightString != null && !weightString.isEmpty()) {
+                double weight = Double.parseDouble(weightString);
+
+                long currentTimeMillis = System.currentTimeMillis();
+
+                WeightDto weightDto = new WeightDto(currentTimeMillis, weight);
+                adapter.weights.add(weightDto);
+                Collections.sort(adapter.weights, Collections.reverseOrder());
+                adapter.notifyDataSetChanged();
+
+                saveWeight(db, currentTimeMillis, weight);
+
+                weightEditText.setText("");
+
+                // Hide keyboard
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view12.getWindowToken(), 0);
+            } else {
+                Toast.makeText(getActivity().getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
             }
         });
 
-        saveWeightButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String weightString = weightEditText.getText().toString();
-                if (weightString != null && !weightString.isEmpty()) {
-                    double weight = Double.parseDouble(weightString);
-
-                    long currentTimeMillis = System.currentTimeMillis();
-
-                    WeightDto weightDto = new WeightDto(currentTimeMillis, weight);
-                    adapter.weights.add(weightDto);
-                    Collections.sort(adapter.weights, Collections.<WeightDto>reverseOrder());
-                    adapter.notifyDataSetChanged();
-
-                    saveWeight(db, currentTimeMillis, weight);
-
-                    weightEditText.setText("");
-
-                    // Hide keyboard
-                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                } else {
-                    Toast.makeText(getActivity().getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
-        loadWeightButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                readWeights();
-            }
-        });
+        loadWeightButton.setOnClickListener(v -> readWeights());
 
         readWeights();
 
@@ -266,22 +239,19 @@ public class WeightFragment extends Fragment {
         adapter.weights.clear();
         db.collection("weights")
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                long timeInMillis = (long) document.getData().get("timeInMillis");
-                                double weightInKgs = (double) document.getData().get("weight in kilograms");
-                                adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
-                                Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
-                            }
-                            Collections.sort(adapter.weights, Collections.<WeightDto>reverseOrder());
-//                            adapter.weights.sort();
-                            adapter.notifyDataSetChanged();
-                        } else {
-                            Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            long timeInMillis = (long) document.getData().get("timeInMillis");
+                            double weightInKgs = (double) document.getData().get("weight in kilograms");
+                            adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
+                            Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
                         }
+                        Collections.sort(adapter.weights, Collections.reverseOrder());
+//                            adapter.weights.sort();
+                        adapter.notifyDataSetChanged();
+                    } else {
+                        Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
                     }
                 });
     }

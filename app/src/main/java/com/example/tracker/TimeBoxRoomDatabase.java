@@ -2,11 +2,9 @@ package com.example.tracker;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,26 +22,10 @@ public abstract class TimeBoxRoomDatabase extends RoomDatabase {
         if (INSTANCE == null) {
             synchronized (TimeBoxRoomDatabase.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), TimeBoxRoomDatabase.class, "time_box_room_database").addCallback(roomDatabaseCallback).build();
+                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), TimeBoxRoomDatabase.class, "time_box_room_database").build();
                 }
             }
         }
         return INSTANCE;
     }
-
-    private static RoomDatabase.Callback roomDatabaseCallback = new RoomDatabase.Callback() {
-        @Override
-        public void onCreate(@NonNull SupportSQLiteDatabase db) {
-            super.onCreate(db);
-
-            databaseWriteExecutor.execute(() -> {
-                TimeBoxDao dao = INSTANCE.timeBoxDao();
-
-                TimeBoxEntity timeBox = new TimeBoxEntity(0, 30 * 60 * 1000, "Task 1");
-                dao.insert(timeBox);
-                timeBox = new TimeBoxEntity(1000, 30 * 60 * 1000, "Task 2");
-                dao.insert(timeBox);
-            });
-        }
-    };
 }

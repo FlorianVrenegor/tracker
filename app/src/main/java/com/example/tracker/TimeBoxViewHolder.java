@@ -21,8 +21,8 @@ public class TimeBoxViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(TimeBoxEntity timeBox) {
         taskTextView.setText(timeBox.getTask());
-        String cringe = "" + timeBox.getDurationInMilliseconds();
-        durationTextView.setText(cringe);
+        String durationString = "" + timeBox.getDurationInMilliseconds(); // Extracted to avoid warning
+        durationTextView.setText(durationString);
     }
 
     static TimeBoxViewHolder create(ViewGroup parent) {

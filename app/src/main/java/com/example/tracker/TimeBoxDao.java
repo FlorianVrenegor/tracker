@@ -14,8 +14,10 @@ public interface TimeBoxDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(TimeBoxEntity entity);
-    @Delete // Query("DELETE FROM time_box_table") // TODO Look up how to delete a single entry -> Easier than I thought
-    void deleteAll(TimeBoxEntity entity);
+    @Delete
+    void delete(TimeBoxEntity entity);
+//    @Query("DELETE FROM time_box_table")
+//    void deleteAll();
     @Query("SELECT * FROM time_box_table ORDER BY started DESC")
     LiveData<List<TimeBoxEntity>> getAllEntities();
 }
