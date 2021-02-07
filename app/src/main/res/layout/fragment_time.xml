@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <NumberPicker
             android:id="@+id/hours_number_picker"
@@ -83,7 +83,8 @@
         android:id="@+id/start_timer_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start" />
+        android:text="Start"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/stop_timer_button"
