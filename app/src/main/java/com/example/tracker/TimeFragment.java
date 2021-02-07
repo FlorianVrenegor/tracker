@@ -1,10 +1,11 @@
 package com.example.tracker;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -101,6 +102,12 @@ public class TimeFragment extends Fragment {
         if (!running) {
             final long timerStartedInMillis = System.currentTimeMillis();
             running = true;
+
+            Intent intent = new Intent(getActivity(), TimerBroadcastReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(requireActivity().getApplicationContext(), 0, intent, 0);
+            AlarmManager alarmManager = (AlarmManager) requireActivity().getSystemService(Context.ALARM_SERVICE);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + milliseconds, pendingIntent);
+
             timer = new CountDownTimer(milliseconds, 1000) {
 
                 public void onTick(long millisUntilFinished) {
@@ -117,20 +124,13 @@ public class TimeFragment extends Fragment {
                 }
 
                 public void onFinish() {
-                    Vibrator v = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
-                    long[] pattern = {0, 300, 300, 300};
-                    v.vibrate(VibrationEffect.createWaveform(pattern, -1)); // VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                    String task = timerEditText.getText().toString();
+                    Log.d(TIME_TAG, "Task '" + task + "', started at: " + timerStartedInMillis + " with duration " + milliseconds + ", finished.");
+                    // Add the timeBox to the room database
+                    timeViewModel.insert(new TimeBoxEntity(timerStartedInMillis, milliseconds, task));
 
                     timerTextView.setText("Done!");
                     running = false;
-
-                    String task = timerEditText.getText().toString();
-                    Toast.makeText(getContext(), "Completed '" + task + "'", Toast.LENGTH_LONG).show();
-
-                    Log.d(TIME_TAG, "Task '" + task + "', started at: " + timerStartedInMillis + " with duration " + milliseconds + ", finished.");
-
-                    // Add the timeBox to the room database
-                    timeViewModel.insert(new TimeBoxEntity(timerStartedInMillis, milliseconds, task));
                 }
             }.start();
         }
