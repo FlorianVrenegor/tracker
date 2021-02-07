@@ -1,6 +1,7 @@
 package com.example.tracker;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.VibrationEffect;
@@ -16,11 +17,31 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.ColumnInfo;
+import androidx.room.Dao;
+import androidx.room.Database;
+import androidx.room.Delete;
+import androidx.room.Entity;
+import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
+import androidx.room.PrimaryKey;
+import androidx.room.Query;
+import androidx.room.RoomDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static android.app.Activity.RESULT_OK;
 
 public class TimeFragment extends Fragment {
+
+    public static final int NEW_TIMEBOX_FRAGMENT_REQUEST_CODE = 1;
 
     private List<TimeBox> completedTimeBoxes = new ArrayList<>();
 
@@ -30,6 +51,8 @@ public class TimeFragment extends Fragment {
 
     private TextView timerTextView;
     private EditText timerEditText;
+
+    private TimeViewModel timeViewModel;
 
     public TimeFragment() {
         super(R.layout.fragment_time);
@@ -89,6 +112,16 @@ public class TimeFragment extends Fragment {
                 startTimer(30 * 60 * 1000);
             }
         });
+
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
+        final TimeBoxListAdapter adapter = new TimeBoxListAdapter(new TimeBoxListAdapter.TimeBoxDiff());
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        timeViewModel = new ViewModelProvider(this).get(TimeViewModel.class);
+        timeViewModel.getAllTimeBoxes().observe(getViewLifecycleOwner(), timeBoxes -> {
+            adapter.submitList(timeBoxes);
+        });
     }
 
     private void startTimer (final long milliseconds) {
@@ -127,6 +160,9 @@ public class TimeFragment extends Fragment {
                     Toast.makeText(getContext(), "Completed '" + task + "'", Toast.LENGTH_LONG).show();
 
                     Log.d("TIME", "Task '" + task + "', started at: " + timerStartedInMillis + " with duration " + milliseconds + ", finished. Total completed: " + completedTimeBoxes.size());
+
+                    // Add the timeBox to the room database
+                    timeViewModel.insert(new TimeBoxEntity(timerStartedInMillis, milliseconds, task));
                 }
             }.start();
         }
