@@ -82,7 +82,7 @@ public class WeightFragment extends Fragment {
             final int positionToRemove = position; // needs to be final to be accessed in the onClick method below
             adb.setNegativeButton("Cancel", null);
             adb.setPositiveButton("Ok", (dialog, which) -> {
-                db.collection("weights").document(weight.timeInMillis + "_" + weight.weightInKgs)
+                db.collection("weights").document(weight.getTimeInMillis() + "_" + weight.getWeightInKgs())
                         .delete()
                         .addOnSuccessListener(aVoid -> Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!"))
                         .addOnFailureListener(e -> Log.w(FIRESTORE_LOG_TAG, "Error deleting document", e));
@@ -149,10 +149,10 @@ public class WeightFragment extends Fragment {
 
         for (WeightDto dto : adapter.weights) {
             if (dto.getWeek() == week - 1) {
-                calendar.setTimeInMillis(dto.timeInMillis);
+                calendar.setTimeInMillis(dto.getTimeInMillis());
                 int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
 
-                yVals.add(new Entry(weekday, (float) dto.weightInKgs));
+                yVals.add(new Entry(weekday, (float) dto.getWeightInKgs()));
             }
         }
 
@@ -232,88 +232,5 @@ public class WeightFragment extends Fragment {
                     }
                     swipeRefreshLayout.setRefreshing(false);
                 });
-    }
-
-    class WeightDto implements Comparable<WeightDto> {
-        private final long timeInMillis;
-        private final int week;
-        private final String date;
-        private final double weightInKgs;
-
-        public WeightDto(long timeInMillis, double weightInKgs) {
-            this.timeInMillis = timeInMillis;
-
-            Date date = new Date(timeInMillis);
-            this.date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.GERMANY).format(date);
-
-            Calendar calendar = Calendar.getInstance(Locale.GERMANY);
-            calendar.setTime(date);
-            this.week = calendar.get(Calendar.WEEK_OF_YEAR);
-
-
-            this.weightInKgs = weightInKgs;
-        }
-
-        public int getWeek() {
-            return week;
-        }
-
-        public long getTimeInMillis() {
-            return timeInMillis;
-        }
-
-        public String getDate() {
-            return date;
-        }
-
-        public String getWeightString() {
-            return weightInKgs + " kg";
-        }
-
-        @Override
-        public int compareTo(WeightDto o) {
-            if (o == null) {
-                return 0;
-            }
-            long result = getTimeInMillis() - o.getTimeInMillis();
-            return result < 0 ? -1 : result == 0 ? 0 : 1;
-        }
-    }
-
-    class WeightAdapter extends BaseAdapter {
-
-        public List<WeightDto> weights = new ArrayList<>();
-
-        @Override
-        public int getCount() {
-            return weights.size();
-        }
-
-        @Override
-        public WeightDto getItem(int position) {
-            return weights.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final View result;
-            if (convertView == null) {
-                result = LayoutInflater.from(parent.getContext()).inflate(R.layout.weight, parent, false);
-            } else {
-                result = convertView;
-            }
-
-            WeightDto item = getItem(position);
-
-            ((TextView) result.findViewById(R.id.date_text_view)).setText(item.getDate());
-            ((TextView) result.findViewById(R.id.weight_text_view)).setText(item.getWeightString());
-
-            return result;
-        }
     }
 }
