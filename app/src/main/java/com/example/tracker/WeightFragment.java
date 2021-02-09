@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -49,6 +50,8 @@ public class WeightFragment extends Fragment {
 
     private FirebaseFirestore db;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
+
     public WeightFragment() {
         super(R.layout.fragment_weight);
     }
@@ -57,10 +60,13 @@ public class WeightFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this::readWeights);
+
         final EditText weightEditText = view.findViewById(R.id.weight_edit_text);
         Button saveWeightButton = view.findViewById(R.id.save_weight_button);
-        Button loadWeightButton = view.findViewById(R.id.load_weight_button);
         ListView weightListView = view.findViewById(R.id.weight_list_view);
+        weightListView.setNestedScrollingEnabled(true);
 
         db = FirebaseFirestore.getInstance();
         adapter = new WeightAdapter();
@@ -110,8 +116,6 @@ public class WeightFragment extends Fragment {
                 Toast.makeText(getActivity().getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
             }
         });
-
-        loadWeightButton.setOnClickListener(v -> readWeights());
 
         readWeights();
     }
@@ -225,6 +229,7 @@ public class WeightFragment extends Fragment {
                     } else {
                         Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
                     }
+                    swipeRefreshLayout.setRefreshing(false);
                 });
     }
 
