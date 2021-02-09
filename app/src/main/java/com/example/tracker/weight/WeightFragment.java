@@ -45,10 +45,8 @@ public class WeightFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);
-
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(this::readWeights);
+        swipeRefreshLayout.setOnRefreshListener(() -> weightViewModel.loadWeights());
 
         final EditText weightEditText = view.findViewById(R.id.weight_edit_text);
         Button saveWeightButton = view.findViewById(R.id.save_weight_button);
@@ -98,7 +96,14 @@ public class WeightFragment extends Fragment {
             }
         });
 
-        readWeights();
+        weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);
+        weightViewModel.getWeights().observe(getViewLifecycleOwner(), weights -> {
+            adapter.setWeights(weights);
+            setupLineChart();
+            swipeRefreshLayout.setRefreshing(false);
+        });
+
+        weightViewModel.loadWeights();
     }
 
     private void setupLineChart() {
@@ -163,17 +168,5 @@ public class WeightFragment extends Fragment {
 
         lineChart.setTouchEnabled(false);
         lineChart.invalidate(); // So the chart refreshes and you don't have to click it
-    }
-
-    private void readWeights() {
-        adapter.weights.clear();
-
-        weightViewModel.loadWeights(adapter, () -> {
-            setupLineChart();
-            return null;
-        }, () -> {
-            swipeRefreshLayout.setRefreshing(false);
-            return null;
-        });
     }
 }

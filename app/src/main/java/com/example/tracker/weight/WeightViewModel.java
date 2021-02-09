@@ -5,27 +5,34 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 public class WeightViewModel extends AndroidViewModel {
 
     private static final String FIRESTORE_LOG_TAG = "Firestore";
 
-    private FirebaseFirestore db;
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    private final MutableLiveData<List<WeightDto>> weights = new MutableLiveData<>();
 
     public WeightViewModel(@NonNull Application application) {
         super(application);
+    }
 
-        db = FirebaseFirestore.getInstance();
+    public LiveData<List<WeightDto>> getWeights() {
+        return weights;
     }
 
     public void deleteWeight(WeightDto weightDto) {
@@ -60,34 +67,22 @@ public class WeightViewModel extends AndroidViewModel {
                 });
     }
 
-    public void loadWeights(WeightAdapter adapter, Callable<Void> success, Callable<Void> after) {
+    public void loadWeights() {
         db.collection("weights")
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        List<WeightDto> weightDtos = new ArrayList<>();
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             long timeInMillis = (long) document.getData().get("timeInMillis");
                             double weightInKgs = (double) document.getData().get("weight in kilograms");
-                            adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
+                            weightDtos.add(new WeightDto(timeInMillis, weightInKgs));
                             Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
                         }
-                        Collections.sort(adapter.weights, Collections.reverseOrder());
-//                            adapter.weights.sort();
-                        adapter.notifyDataSetChanged();
-
-                        try {
-                            success.call();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        weightDtos.sort(Collections.reverseOrder());
+                        weights.setValue(weightDtos);
                     } else {
                         Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
-                    }
-
-                    try {
-                        after.call();
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 });
     }

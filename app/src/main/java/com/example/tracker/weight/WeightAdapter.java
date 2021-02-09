@@ -46,4 +46,9 @@ class WeightAdapter extends BaseAdapter {
 
         return result;
     }
+
+    public void setWeights(List<WeightDto> weights) {
+        this.weights = weights;
+        notifyDataSetChanged();
+    }
 }
