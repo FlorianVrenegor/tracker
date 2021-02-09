@@ -1,4 +1,4 @@
-package com.example.tracker;
+package com.example.tracker.time;
 
 import android.app.Application;
 

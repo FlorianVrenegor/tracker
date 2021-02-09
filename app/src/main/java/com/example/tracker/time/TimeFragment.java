@@ -1,4 +1,4 @@
-package com.example.tracker;
+package com.example.tracker.time;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -20,6 +20,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.tracker.R;
 
 import java.util.Locale;
 

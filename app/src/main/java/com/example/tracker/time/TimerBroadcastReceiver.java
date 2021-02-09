@@ -1,4 +1,4 @@
-package com.example.tracker;
+package com.example.tracker.time;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -11,6 +11,8 @@ import android.os.Vibrator;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import com.example.tracker.R;
 
 public class TimerBroadcastReceiver extends BroadcastReceiver {
 
