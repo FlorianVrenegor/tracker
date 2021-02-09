@@ -33,8 +33,6 @@ public class WeightFragment extends Fragment {
 
     private WeightAdapter adapter;
 
-    private SwipeRefreshLayout swipeRefreshLayout;
-
     private WeightViewModel weightViewModel;
 
     public WeightFragment() {
@@ -45,7 +43,7 @@ public class WeightFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
+        SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(() -> weightViewModel.loadWeights());
 
         final EditText weightEditText = view.findViewById(R.id.weight_edit_text);
