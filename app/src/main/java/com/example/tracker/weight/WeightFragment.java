@@ -2,22 +2,18 @@ package com.example.tracker.weight;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.tracker.R;
@@ -28,30 +24,18 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 public class WeightFragment extends Fragment {
 
-    private static final String FIRESTORE_LOG_TAG = "Firestore";
-
     private WeightAdapter adapter;
 
-    private FirebaseFirestore db;
-
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    private WeightViewModel weightViewModel;
 
     public WeightFragment() {
         super(R.layout.fragment_weight);
@@ -61,6 +45,8 @@ public class WeightFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);
+
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this::readWeights);
 
@@ -69,23 +55,17 @@ public class WeightFragment extends Fragment {
         ListView weightListView = view.findViewById(R.id.weight_list_view);
         weightListView.setNestedScrollingEnabled(true);
 
-        db = FirebaseFirestore.getInstance();
         adapter = new WeightAdapter();
         weightListView.setAdapter(adapter);
         weightListView.setOnItemLongClickListener((parent, view1, position, id) -> {
             final WeightDto weight = adapter.weights.get(position);
-            Toast.makeText(getActivity().getApplicationContext(), weight.getWeightString(), Toast.LENGTH_LONG).show();
-
             AlertDialog.Builder adb = new AlertDialog.Builder(getActivity());
             adb.setTitle("Delete?");
             adb.setMessage("Are you sure you want to delete " + position);
             final int positionToRemove = position; // needs to be final to be accessed in the onClick method below
             adb.setNegativeButton("Cancel", null);
             adb.setPositiveButton("Ok", (dialog, which) -> {
-                db.collection("weights").document(weight.getTimeInMillis() + "_" + weight.getWeightInKgs())
-                        .delete()
-                        .addOnSuccessListener(aVoid -> Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!"))
-                        .addOnFailureListener(e -> Log.w(FIRESTORE_LOG_TAG, "Error deleting document", e));
+                weightViewModel.deleteWeight(weight);
                 adapter.weights.remove(positionToRemove);
                 adapter.notifyDataSetChanged();
             });
@@ -106,7 +86,7 @@ public class WeightFragment extends Fragment {
                 Collections.sort(adapter.weights, Collections.reverseOrder());
                 adapter.notifyDataSetChanged();
 
-                saveWeight(db, currentTimeMillis, weight);
+                weightViewModel.saveWeight(currentTimeMillis, weight);
 
                 weightEditText.setText("");
 
@@ -185,52 +165,15 @@ public class WeightFragment extends Fragment {
         lineChart.invalidate(); // So the chart refreshes and you don't have to click it
     }
 
-    private void saveWeight(FirebaseFirestore db, long timeInMillis, double weightKgs) {
-        // Create a map of the object to save
-        Map<String, Object> weight = new HashMap<>();
-        weight.put("timeInMillis", timeInMillis);
-        weight.put("weight in kilograms", weightKgs);
-
-        final String documentId = timeInMillis + "_" + weightKgs;
-
-        // Add a new document with a generated ID
-        db.collection("weights").document(documentId)
-                .set(weight)
-                .addOnSuccessListener(new OnSuccessListener() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + documentId);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(FIRESTORE_LOG_TAG, "Error adding document", e);
-                    }
-                });
-    }
-
     private void readWeights() {
         adapter.weights.clear();
-        db.collection("weights")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            long timeInMillis = (long) document.getData().get("timeInMillis");
-                            double weightInKgs = (double) document.getData().get("weight in kilograms");
-                            adapter.weights.add(new WeightDto(timeInMillis, weightInKgs));
-                            Log.d(FIRESTORE_LOG_TAG, document.getId() + " => " + document.getData());
-                        }
-                        Collections.sort(adapter.weights, Collections.reverseOrder());
-//                            adapter.weights.sort();
-                        adapter.notifyDataSetChanged();
 
-                        setupLineChart();
-                    } else {
-                        Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
-                    }
-                    swipeRefreshLayout.setRefreshing(false);
-                });
+        weightViewModel.loadWeights(adapter, () -> {
+            setupLineChart();
+            return null;
+        }, () -> {
+            swipeRefreshLayout.setRefreshing(false);
+            return null;
+        });
     }
 }
