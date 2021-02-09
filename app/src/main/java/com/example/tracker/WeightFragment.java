@@ -31,7 +31,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -115,52 +114,17 @@ public class WeightFragment extends Fragment {
         loadWeightButton.setOnClickListener(v -> readWeights());
 
         readWeights();
-
-        setupLineChart();
     }
 
     private void setupLineChart() {
         LineChart lineChart = getView().findViewById(R.id.line_chart);
 
-//        ArrayList<String> dates = new ArrayList<>();
-//        ArrayList<Entry> weights = new ArrayList<>();
-//
-//
-//        for (WeightDto w : adapter.weights) {
-//            dates.add(w.date);
-//            weights.add(new Entry(w.date, (float) w.weightInKgs));
-//        }
-//
-//        for (int i = 0; i < adapter.weights.size(); i++) {
-//
-//        }
-//
-//        ArrayList<ILineDataSet> lineDataSets = new ArrayList<>();
-
-        try {
-            String dateString = "2021-01-25";
-            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).parse(dateString);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(date);
-            int weekNumber = cal.get(Calendar.WEEK_OF_YEAR);
-        } catch (ParseException e) {
-            Log.d("Exception", e.getMessage());
-        }
-
-        final ArrayList<String> xVals = new ArrayList<>();
-        xVals.add("2021-01-25");
-        xVals.add("2021-01-26");
-        xVals.add("2021-01-27");
-        xVals.add("2021-01-28");
-        xVals.add("2021-01-29");
-        xVals.add("2021-01-30");
-        xVals.add("2021-01-31");
-        xVals.add("2021-02-01");
-
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f); // only intervals of 1 day
+        xAxis.setGranularity(1); // only intervals of 1 day
         xAxis.setLabelCount(7);
+        xAxis.setAxisMinimum(-0.25f);
+        xAxis.setAxisMaximum(6.25f);
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter(new ValueFormatter() {
@@ -173,22 +137,35 @@ public class WeightFragment extends Fragment {
         });
 
         ArrayList<Entry> yVals = new ArrayList<>();
-        yVals.add(new Entry(0f, 85.5f));
-        yVals.add(new Entry(1f, 84.5f));
-        yVals.add(new Entry(2f, 84.5f));
-        yVals.add(new Entry(3f, 83.5f));
-        yVals.add(new Entry(4f, 82.5f));
-        yVals.add(new Entry(5f, 83.5f));
-        yVals.add(new Entry(6f, 82.5f));
-        yVals.add(new Entry(7f, 81.5f));
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        int week = calendar.get(Calendar.WEEK_OF_YEAR);
+
+        for (WeightDto dto : adapter.weights) {
+            if (dto.getWeek() == week - 1) {
+                calendar.setTimeInMillis(dto.timeInMillis);
+                int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+
+                yVals.add(new Entry(weekday, (float) dto.weightInKgs));
+            }
+        }
+
+        yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
 
         LineDataSet dataSet = new LineDataSet(yVals, "Weights");
+        dataSet.setCircleRadius(4f);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawValues(false);
+
         LineData lineData = new LineData(dataSet);
 //        lineChart.setXAxisRenderer();
 
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setDrawAxisLine(false);
-        leftAxis.setGranularity(1f);
+        leftAxis.setGranularity(0.5f);
+//        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
+        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
 
         YAxis rightAxis = lineChart.getAxisRight();
         rightAxis.setDrawAxisLine(false);
@@ -198,16 +175,9 @@ public class WeightFragment extends Fragment {
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
         lineChart.setData(lineData);
-    }
 
-    private List<WeightDto> getWeightsForWeek(int week) {
-        List<WeightDto> result = new ArrayList<>();
-        for (WeightDto w : adapter.weights) {
-            if (w.week == week) {
-                result.add(w);
-            }
-        }
-        return result;
+        lineChart.setTouchEnabled(false);
+        lineChart.invalidate(); // So the chart refreshes and you don't have to click it
     }
 
     private void saveWeight(FirebaseFirestore db, long timeInMillis, double weightKgs) {
@@ -250,6 +220,8 @@ public class WeightFragment extends Fragment {
                         Collections.sort(adapter.weights, Collections.reverseOrder());
 //                            adapter.weights.sort();
                         adapter.notifyDataSetChanged();
+
+                        setupLineChart();
                     } else {
                         Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.getException());
                     }
