@@ -145,6 +145,7 @@ public class WeightFragment extends Fragment {
         dataSet.setCircleRadius(4f);
         dataSet.setLineWidth(2f);
         dataSet.setDrawValues(false);
+//        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
 
         LineData lineData = new LineData(dataSet);
 //        lineChart.setXAxisRenderer();
@@ -163,7 +164,6 @@ public class WeightFragment extends Fragment {
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
         lineChart.setData(lineData);
-
         lineChart.setTouchEnabled(false);
         lineChart.invalidate(); // So the chart refreshes and you don't have to click it
     }
