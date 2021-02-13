@@ -43,28 +43,19 @@ public class WeightViewModel extends AndroidViewModel {
     }
 
     public void saveWeight(long timeInMillis, double weightKgs) {
-        // Create a map of the object to save
+        weights.getValue().add(new WeightDto(timeInMillis, weightKgs));
+        weights.getValue().sort(Collections.reverseOrder());
+
         Map<String, Object> weight = new HashMap<>();
         weight.put("timeInMillis", timeInMillis);
         weight.put("weight in kilograms", weightKgs);
 
         final String documentId = timeInMillis + "_" + weightKgs;
 
-        // Add a new document with a generated ID
         db.collection("weights").document(documentId)
                 .set(weight)
-                .addOnSuccessListener(new OnSuccessListener() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + documentId);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(FIRESTORE_LOG_TAG, "Error adding document", e);
-                    }
-                });
+                .addOnSuccessListener(o -> Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + documentId))
+                .addOnFailureListener(e -> Log.w(FIRESTORE_LOG_TAG, "Error adding document", e));
     }
 
     public void loadWeights() {

@@ -1,14 +1,12 @@
 package com.example.tracker.weight;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,10 +24,10 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 
 public class WeightFragment extends Fragment {
 
@@ -48,10 +46,35 @@ public class WeightFragment extends Fragment {
         SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(() -> weightViewModel.loadWeights());
 
-        final EditText weightEditText = view.findViewById(R.id.weight_edit_text);
-        Button saveWeightButton = view.findViewById(R.id.save_weight_button);
         ListView weightListView = view.findViewById(R.id.weight_list_view);
         weightListView.setNestedScrollingEnabled(true);
+
+        FloatingActionButton fab = view.findViewById(R.id.fab);
+        fab.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle("Gewicht eingeben");
+
+            final EditText input = new EditText(getContext());
+            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+
+            LinearLayout layoutName = new LinearLayout(getContext());
+            layoutName.setOrientation(LinearLayout.VERTICAL);
+            layoutName.setPadding(60, 0, 60, 0);
+            layoutName.addView(input);
+
+            builder.setView(layoutName);
+            builder.setPositiveButton("OK", (dialog, which) -> {
+                String weightString = input.getText().toString();
+                if (weightString != null && !weightString.isEmpty()) {
+                    double weight = Double.parseDouble(weightString);
+                    long currentTimeMillis = System.currentTimeMillis();
+
+                    weightViewModel.saveWeight(currentTimeMillis, weight);
+                }
+            });
+            builder.setNegativeButton("Abbrechen", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
 
         adapter = new WeightAdapter();
         weightListView.setAdapter(adapter);
@@ -70,30 +93,6 @@ public class WeightFragment extends Fragment {
             adb.show();
 
             return false;
-        });
-
-        saveWeightButton.setOnClickListener(view12 -> {
-            String weightString = weightEditText.getText().toString();
-            if (weightString != null && !weightString.isEmpty()) {
-                double weight = Double.parseDouble(weightString);
-
-                long currentTimeMillis = System.currentTimeMillis();
-
-                WeightDto weightDto = new WeightDto(currentTimeMillis, weight);
-                adapter.weights.add(weightDto);
-                Collections.sort(adapter.weights, Collections.reverseOrder());
-                adapter.notifyDataSetChanged();
-
-                weightViewModel.saveWeight(currentTimeMillis, weight);
-
-                weightEditText.setText("");
-
-                // Hide keyboard
-                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view12.getWindowToken(), 0);
-            } else {
-                Toast.makeText(getActivity().getApplicationContext(), "Missing weight.", Toast.LENGTH_LONG).show();
-            }
         });
 
         weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);

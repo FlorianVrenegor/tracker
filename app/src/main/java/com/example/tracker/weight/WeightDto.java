@@ -7,6 +7,8 @@ import java.util.Locale;
 
 class WeightDto implements Comparable<WeightDto> {
 
+    private final static String DATE_PATTERN = "dd.MM, HH:mm"; // "yyyy-MM-dd HH:mm"
+
     private final long timeInMillis;
     private final int week;
     private final String date;
@@ -16,7 +18,7 @@ class WeightDto implements Comparable<WeightDto> {
         this.timeInMillis = timeInMillis;
 
         Date date = new Date(timeInMillis);
-        this.date = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.GERMANY).format(date);
+        this.date = new SimpleDateFormat(DATE_PATTERN, Locale.GERMANY).format(date);
 
         Calendar calendar = Calendar.getInstance(Locale.GERMANY);
         calendar.setTime(date);
