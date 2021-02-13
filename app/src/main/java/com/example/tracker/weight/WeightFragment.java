@@ -1,6 +1,7 @@
 package com.example.tracker.weight;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -106,6 +108,7 @@ public class WeightFragment extends Fragment {
 
     private void setupLineChart() {
         LineChart lineChart = getView().findViewById(R.id.line_chart);
+//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
 
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -130,22 +133,37 @@ public class WeightFragment extends Fragment {
         calendar.setTimeInMillis(System.currentTimeMillis());
         int week = calendar.get(Calendar.WEEK_OF_YEAR);
 
-        for (WeightDto dto : adapter.weights) {
+        for (int i = 0; i < adapter.weights.size(); i++) {
+            WeightDto dto = adapter.weights.get(i);
             if (dto.getWeek() == week - 1) {
+                if (yVals.size() == 0) {
+                    yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
+                }
+
                 calendar.setTimeInMillis(dto.getTimeInMillis());
                 int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
 
                 yVals.add(new Entry(weekday, (float) dto.getWeightInKgs()));
+
+                if (yVals.size() == 8) {
+                    yVals.add(new Entry(7, (float) adapter.weights.get(i + 1).getWeightInKgs()));
+                }
             }
         }
 
         yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
 
         LineDataSet dataSet = new LineDataSet(yVals, "Weights");
-        dataSet.setCircleRadius(4f);
+//        dataSet.setDrawCircles(false);
+        dataSet.setCircleRadius(3f);
+        dataSet.setDrawCircleHole(false);
         dataSet.setLineWidth(2f);
         dataSet.setDrawValues(false);
-//        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setDrawFilled(true);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.gradient_linechart_background);
+        dataSet.setFillDrawable(drawable);
+//        dataSet.setFillAlpha(0);
 
         LineData lineData = new LineData(dataSet);
 //        lineChart.setXAxisRenderer();
@@ -160,11 +178,15 @@ public class WeightFragment extends Fragment {
         rightAxis.setDrawAxisLine(false);
         rightAxis.setDrawLabels(false);
         rightAxis.setDrawGridLines(false);
+//        rightAxis.setAxisLineWidth(0);
+//        rightAxis.setXOffset(-5f);
 
         lineChart.getDescription().setEnabled(false);
         lineChart.getLegend().setEnabled(false);
         lineChart.setData(lineData);
         lineChart.setTouchEnabled(false);
         lineChart.invalidate(); // So the chart refreshes and you don't have to click it
+
+        lineChart.setExtraOffsets(5, 10, 0, 10);
     }
 }
