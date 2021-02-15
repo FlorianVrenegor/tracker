@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -28,8 +29,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 public class WeightFragment extends Fragment {
+
+    private int week = 0;
+    private int month = 0;
 
     private WeightAdapter adapter;
 
@@ -42,6 +47,11 @@ public class WeightFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        week = calendar.get(Calendar.WEEK_OF_YEAR);
+        month = calendar.get(Calendar.MONTH);
 
         SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(() -> weightViewModel.loadWeights());
@@ -95,17 +105,92 @@ public class WeightFragment extends Fragment {
             return false;
         });
 
+        Button lineChartWeek = view.findViewById(R.id.button_chart_week);
+        lineChartWeek.setOnClickListener(v -> {
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            week = calendar.get(Calendar.WEEK_OF_YEAR);
+            setupLineChartWeek(week);
+        });
+        Button lineChartMonth = view.findViewById(R.id.button_chart_month);
+        lineChartMonth.setOnClickListener(v -> {
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            month = calendar.get(Calendar.MONTH);
+            setupLineChartMonth(month);
+        });
+
+        Button lineChartPrev = view.findViewById(R.id.button_chart_prev);
+        lineChartPrev.setOnClickListener(v -> {
+            if(week > 0) {
+                week -= 1;
+            }
+            setupLineChartWeek(week);
+        });
+        Button lineChartNext = view.findViewById(R.id.button_chart_next);
+        lineChartNext.setOnClickListener(v -> {
+            week += 1;
+            setupLineChartWeek(week);
+        });
+
         weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);
         weightViewModel.getWeights().observe(getViewLifecycleOwner(), weights -> {
             adapter.setWeights(weights);
-            setupLineChart();
+//            setupLineChart();
+            setupLineChartWeek(week);
+//            setupLineChartMonth();
             swipeRefreshLayout.setRefreshing(false);
         });
 
         weightViewModel.loadWeights();
     }
 
-    private void setupLineChart() {
+    private void setupLineChartBase() {
+        LineChart lineChart = getView().findViewById(R.id.line_chart);
+//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
+
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setDrawGridLines(false);
+
+        ArrayList<Entry> yVals = new ArrayList<>();
+
+        LineDataSet dataSet = new LineDataSet(yVals, "Weights");
+//        dataSet.setDrawCircles(false);
+        dataSet.setCircleRadius(3f);
+        dataSet.setDrawCircleHole(false);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setDrawFilled(true);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.gradient_linechart_background);
+        dataSet.setFillDrawable(drawable);
+//        dataSet.setFillAlpha(0);
+
+        LineData lineData = new LineData(dataSet);
+//        lineChart.setXAxisRenderer();
+
+        YAxis leftAxis = lineChart.getAxisLeft();
+        leftAxis.setDrawAxisLine(false);
+        leftAxis.setGranularity(0.5f);
+
+        YAxis rightAxis = lineChart.getAxisRight();
+        rightAxis.setDrawAxisLine(false);
+        rightAxis.setDrawLabels(false);
+        rightAxis.setDrawGridLines(false);
+//        rightAxis.setAxisLineWidth(0);
+//        rightAxis.setXOffset(-5f);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.getLegend().setEnabled(false);
+        lineChart.setData(lineData);
+        lineChart.setTouchEnabled(false);
+        lineChart.invalidate(); // So the chart refreshes and you don't have to click it
+
+        lineChart.setExtraOffsets(5, 10, 0, 10);
+
+    }
+
+    private void setupLineChartWeek(int week) {
         LineChart lineChart = getView().findViewById(R.id.line_chart);
 //        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
 
@@ -128,23 +213,196 @@ public class WeightFragment extends Fragment {
 
         ArrayList<Entry> yVals = new ArrayList<>();
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        int week = calendar.get(Calendar.WEEK_OF_YEAR);
+        Collections.sort(adapter.weights);
+
+        boolean hasBefore = false;
 
         for (int i = 0; i < adapter.weights.size(); i++) {
             WeightDto dto = adapter.weights.get(i);
-            if (dto.getWeek() == week - 1) {
-                if (yVals.size() == 0) {
+            if (dto.getWeek() == week) {
+                if (i > 0 && yVals.size() == 0) {
                     yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
+                    hasBefore = true;
                 }
 
+                Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(dto.getTimeInMillis());
                 int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
 
                 yVals.add(new Entry(weekday, (float) dto.getWeightInKgs()));
 
-                if (yVals.size() == 8) {
+                if (adapter.weights.size() > i + 1 && yVals.size() == (hasBefore ? 8 : 7)) {
+                    WeightDto dto2 = adapter.weights.get(i + 1);
+                    yVals.add(new Entry(7, (float) dto2.getWeightInKgs()));
+                }
+            }
+        }
+
+        adapter.weights.sort(Collections.reverseOrder());
+
+        yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
+
+        LineDataSet dataSet = new LineDataSet(yVals, "Weights");
+//        dataSet.setDrawCircles(false);
+        dataSet.setCircleRadius(3f);
+        dataSet.setDrawCircleHole(false);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setDrawFilled(true);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.gradient_linechart_background);
+        dataSet.setFillDrawable(drawable);
+//        dataSet.setFillAlpha(0);
+
+        LineData lineData = new LineData(dataSet);
+//        lineChart.setXAxisRenderer();
+
+        YAxis leftAxis = lineChart.getAxisLeft();
+        leftAxis.setDrawAxisLine(false);
+        leftAxis.setGranularity(0.5f);
+//        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
+        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+
+        YAxis rightAxis = lineChart.getAxisRight();
+        rightAxis.setDrawAxisLine(false);
+        rightAxis.setDrawLabels(false);
+        rightAxis.setDrawGridLines(false);
+//        rightAxis.setAxisLineWidth(0);
+//        rightAxis.setXOffset(-5f);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.getLegend().setEnabled(false);
+        lineChart.setData(lineData);
+        lineChart.setTouchEnabled(false);
+        lineChart.invalidate(); // So the chart refreshes and you don't have to click it
+
+        lineChart.setExtraOffsets(5, 10, 0, 10);
+    }
+
+    private void setupLineChartMonth(int month) {
+        LineChart lineChart = getView().findViewById(R.id.line_chart);
+//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
+
+        Calendar calendar = Calendar.getInstance();
+        int daysInMonth = calendar.getActualMaximum(month); // months starts at 0
+
+        Collections.sort(adapter.weights);
+        int counter = 0;
+
+        ArrayList<Entry> yVals = new ArrayList<>();
+
+        for (int i = 0; i < adapter.weights.size(); i++) {
+            WeightDto dto = adapter.weights.get(i);
+            if (dto.getMonth() == month) {
+                if (i - 1 >= 0 && yVals.size() == 0) {
+                    yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
+                }
+                yVals.add(new Entry(counter++, (float) dto.getWeightInKgs()));
+
+                if (adapter.weights.size() >= i + 1 && yVals.size() == 28) {
+                    yVals.add(new Entry(7, (float) adapter.weights.get(i + 1).getWeightInKgs()));
+                }
+            }
+        }
+//        yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
+
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(5);
+        xAxis.setLabelCount(daysInMonth);
+        xAxis.setAxisMinimum(-0.25f);
+        float max = yVals.size() - 1 + 0.25f;
+        xAxis.setAxisMaximum(max);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setDrawGridLines(false);
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return value + "";
+            }
+        });
+
+        LineDataSet dataSet = new LineDataSet(yVals, "Weights");
+//        dataSet.setDrawCircles(false);
+        dataSet.setCircleRadius(3f);
+        dataSet.setDrawCircleHole(false);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setDrawFilled(true);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.gradient_linechart_background);
+        dataSet.setFillDrawable(drawable);
+//        dataSet.setFillAlpha(0);
+
+        LineData lineData = new LineData(dataSet);
+//        lineChart.setXAxisRenderer();
+
+        YAxis leftAxis = lineChart.getAxisLeft();
+        leftAxis.setDrawAxisLine(false);
+        leftAxis.setGranularity(0.5f);
+//        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
+        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+
+        YAxis rightAxis = lineChart.getAxisRight();
+        rightAxis.setDrawAxisLine(false);
+        rightAxis.setDrawLabels(false);
+        rightAxis.setDrawGridLines(false);
+//        rightAxis.setAxisLineWidth(0);
+//        rightAxis.setXOffset(-5f);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.getLegend().setEnabled(false);
+        lineChart.setData(lineData);
+        lineChart.setTouchEnabled(false);
+        lineChart.invalidate(); // So the chart refreshes and you don't have to click it
+
+        lineChart.setExtraOffsets(5, 10, 0, 10);
+    }
+
+    private void setupLineChart() {
+        LineChart lineChart = getView().findViewById(R.id.line_chart);
+//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
+
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(5); // only intervals of 1 day
+        xAxis.setLabelCount(28);
+        xAxis.setAxisMinimum(-0.25f);
+        xAxis.setAxisMaximum(12.25f);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setDrawGridLines(false);
+        xAxis.setValueFormatter(new ValueFormatter() {
+//            final String[] days = new String[]{"Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"};
+
+            @Override
+            public String getFormattedValue(float value) {
+                return value + ""; // days[(int) value % 7];
+            }
+        });
+
+        ArrayList<Entry> yVals = new ArrayList<>();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        int week = calendar.get(Calendar.WEEK_OF_YEAR);
+        int month = calendar.get(Calendar.MONTH);
+
+        Collections.sort(adapter.weights);
+        int counter = 0;
+
+        for (int i = 0; i < adapter.weights.size(); i++) {
+            WeightDto dto = adapter.weights.get(i);
+            if (dto.getMonth() == month) {
+                if (i - 1 >= 0 && yVals.size() == 0) {
+                    yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
+                }
+
+                calendar.setTimeInMillis(dto.getTimeInMillis());
+//                int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+
+                yVals.add(new Entry(counter++, (float) dto.getWeightInKgs()));
+
+                if (adapter.weights.size() >= i + 1 && yVals.size() == 28) {
                     yVals.add(new Entry(7, (float) adapter.weights.get(i + 1).getWeightInKgs()));
                 }
             }
