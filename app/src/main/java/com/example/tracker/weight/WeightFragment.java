@@ -308,11 +308,7 @@ public class WeightFragment extends Fragment {
         LineChart lineChart = getView().findViewById(R.id.line_chart);
 //        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
 
-        Calendar calendar = Calendar.getInstance();
-        int daysInMonth = calendar.getActualMaximum(month); // months starts at 0
-
         Collections.sort(adapter.weights);
-        int counter = 0;
 
         ArrayList<Entry> yVals = new ArrayList<>();
 
@@ -320,9 +316,9 @@ public class WeightFragment extends Fragment {
             WeightDto dto = adapter.weights.get(i);
             if (dto.getMonth() == month) {
                 if (i - 1 >= 0 && yVals.size() == 0) {
-                    yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
+                    yVals.add(new Entry(0, (float) adapter.weights.get(i - 1).getWeightInKgs()));
                 }
-                yVals.add(new Entry(counter++, (float) dto.getWeightInKgs()));
+                yVals.add(new Entry(dto.getDayInMonth(), (float) dto.getWeightInKgs()));
 
                 if (adapter.weights.size() >= i + 1 && yVals.size() == 28) {
                     yVals.add(new Entry(7, (float) adapter.weights.get(i + 1).getWeightInKgs()));
@@ -334,16 +330,15 @@ public class WeightFragment extends Fragment {
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(5);
-        xAxis.setLabelCount(daysInMonth);
-        xAxis.setAxisMinimum(-0.25f);
-        float max = yVals.size() - 1 + 0.25f;
+        xAxis.setAxisMinimum(0.75f);
+        float max = 31 + 0.25f;
         xAxis.setAxisMaximum(max);
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return value + "";
+                return Math.round(value) + "";
             }
         });
 
