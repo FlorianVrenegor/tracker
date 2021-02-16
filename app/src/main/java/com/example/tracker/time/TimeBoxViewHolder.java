@@ -21,8 +21,8 @@ public class TimeBoxViewHolder extends RecyclerView.ViewHolder {
         durationTextView = itemView.findViewById(R.id.duration_text_view);
     }
 
-    public void bind(TimeBoxEntity timeBox) {
-        taskTextView.setText(timeBox.getTask());
+    public void bind(TimeBoxDto timeBox) {
+        taskTextView.setText(timeBox.getDescription());
 
         long durationInMilliseconds = timeBox.getDurationInMilliseconds();
         long durationInSeconds = durationInMilliseconds / 1000 % 60;

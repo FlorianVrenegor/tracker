@@ -1,4 +1,4 @@
-package com.example.tracker.time;
+package com.example.tracker.time.room;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;

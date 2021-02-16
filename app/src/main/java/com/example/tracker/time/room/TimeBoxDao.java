@@ -1,4 +1,4 @@
-package com.example.tracker.time;
+package com.example.tracker.time.room;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;

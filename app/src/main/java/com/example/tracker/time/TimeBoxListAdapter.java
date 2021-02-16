@@ -6,9 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 
-public class TimeBoxListAdapter extends ListAdapter<TimeBoxEntity, TimeBoxViewHolder> {
+public class TimeBoxListAdapter extends ListAdapter<TimeBoxDto, TimeBoxViewHolder> {
 
-    protected TimeBoxListAdapter(@NonNull DiffUtil.ItemCallback<TimeBoxEntity> diffCallback) {
+    protected TimeBoxListAdapter(@NonNull DiffUtil.ItemCallback<TimeBoxDto> diffCallback) {
         super(diffCallback);
     }
 
@@ -20,20 +20,20 @@ public class TimeBoxListAdapter extends ListAdapter<TimeBoxEntity, TimeBoxViewHo
 
     @Override
     public void onBindViewHolder(@NonNull TimeBoxViewHolder holder, int position) {
-        TimeBoxEntity timeBox = getItem(position);
+        TimeBoxDto timeBox = getItem(position);
         holder.bind(timeBox);
     }
 
-    static class TimeBoxDiff extends DiffUtil.ItemCallback<TimeBoxEntity> {
+    static class TimeBoxDiff extends DiffUtil.ItemCallback<TimeBoxDto> {
 
         @Override
-        public boolean areItemsTheSame(@NonNull TimeBoxEntity oldItem, @NonNull TimeBoxEntity newItem) {
+        public boolean areItemsTheSame(@NonNull TimeBoxDto oldItem, @NonNull TimeBoxDto newItem) {
             return oldItem == newItem;
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull TimeBoxEntity oldItem, @NonNull TimeBoxEntity newItem) {
-            return oldItem.getTask().equals(newItem.getTask())
+        public boolean areContentsTheSame(@NonNull TimeBoxDto oldItem, @NonNull TimeBoxDto newItem) {
+            return oldItem.getDescription().equals(newItem.getDescription())
                     && oldItem.getDurationInMilliseconds() == newItem.getDurationInMilliseconds()
                     && oldItem.getTimeStartedInMilliseconds() == newItem.getTimeStartedInMilliseconds();
         }

@@ -129,7 +129,7 @@ public class TimeFragment extends Fragment {
                     String task = timerEditText.getText().toString();
                     Log.d(TIME_TAG, "Task '" + task + "', started at: " + timerStartedInMillis + " with duration " + milliseconds + ", finished.");
                     // Add the timeBox to the room database
-                    timeViewModel.insert(new TimeBoxEntity(timerStartedInMillis, milliseconds, task));
+                    timeViewModel.insert(new TimeBoxDto(timerStartedInMillis, milliseconds, task));
 
                     timerTextView.setText("Done!");
                     running = false;
