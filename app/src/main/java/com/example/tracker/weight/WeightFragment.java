@@ -33,8 +33,13 @@ import java.util.Collections;
 
 public class WeightFragment extends Fragment {
 
+    enum DisplayMode {
+        WEEK, MONTH
+    }
+
     private int week = 0;
     private int month = 0;
+    private DisplayMode displayMode = DisplayMode.WEEK;
 
     private WeightAdapter adapter;
 
@@ -109,28 +114,46 @@ public class WeightFragment extends Fragment {
 
         Button lineChartWeek = view.findViewById(R.id.button_chart_week);
         lineChartWeek.setOnClickListener(v -> {
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            week = calendar.get(Calendar.WEEK_OF_YEAR);
-            setupLineChartWeek(week);
+            if (displayMode != DisplayMode.WEEK) {
+                calendar.setTimeInMillis(System.currentTimeMillis());
+                week = calendar.get(Calendar.WEEK_OF_YEAR);
+                setupLineChartWeek(week);
+            }
+            displayMode = DisplayMode.WEEK;
         });
         Button lineChartMonth = view.findViewById(R.id.button_chart_month);
         lineChartMonth.setOnClickListener(v -> {
-            calendar.setTimeInMillis(System.currentTimeMillis());
-            month = calendar.get(Calendar.MONTH);
-            setupLineChartMonth(month);
+            if (displayMode != DisplayMode.MONTH) {
+                calendar.setTimeInMillis(System.currentTimeMillis());
+                month = calendar.get(Calendar.MONTH);
+                setupLineChartMonth(month);
+            }
+            displayMode = DisplayMode.MONTH;
         });
 
         Button lineChartPrev = view.findViewById(R.id.button_chart_prev);
         lineChartPrev.setOnClickListener(v -> {
-            if(week > 0) {
-                week -= 1;
+            if (displayMode == DisplayMode.WEEK) {
+                if (week > 0) {
+                    week -= 1;
+                }
+                setupLineChartWeek(week);
+            } else if (displayMode == DisplayMode.MONTH) {
+                if (month > 0) {
+                    month -= 1;
+                }
+                setupLineChartMonth(month);
             }
-            setupLineChartWeek(week);
         });
         Button lineChartNext = view.findViewById(R.id.button_chart_next);
         lineChartNext.setOnClickListener(v -> {
-            week += 1;
-            setupLineChartWeek(week);
+            if (displayMode == DisplayMode.WEEK) {
+                week += 1;
+                setupLineChartWeek(week);
+            } else if (displayMode == DisplayMode.MONTH) {
+                month += 1;
+                setupLineChartMonth(month);
+            }
         });
 
         weightViewModel = new ViewModelProvider(this).get(WeightViewModel.class);
