@@ -13,6 +13,7 @@ class WeightDto implements Comparable<WeightDto> {
     private final int week;
     private final int month;
     private final int dayInMonth;
+    private final int year;
     private final String date;
     private final double weightInKgs;
 
@@ -25,8 +26,9 @@ class WeightDto implements Comparable<WeightDto> {
         Calendar calendar = Calendar.getInstance(Locale.GERMANY);
         calendar.setTime(date);
         this.week = calendar.get(Calendar.WEEK_OF_YEAR);
-        this.month = calendar.get(Calendar.MONTH);
+        this.month = calendar.get(Calendar.MONTH) + 1;
         this.dayInMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        this.year = calendar.get(Calendar.YEAR);
 
         this.weightInKgs = weightInKgs;
     }
@@ -41,6 +43,10 @@ class WeightDto implements Comparable<WeightDto> {
 
     public int getDayInMonth() {
         return dayInMonth;
+    }
+
+    public int getYear() {
+        return year;
     }
 
     public long getTimeInMillis() {

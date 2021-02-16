@@ -27,6 +27,7 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -38,7 +39,7 @@ public class WeightFragment extends Fragment {
     }
 
     private int week = 0;
-    private int month = 0;
+    private YearMonth yearMonth;
     private DisplayMode displayMode = DisplayMode.WEEK;
 
     private WeightAdapter adapter;
@@ -58,7 +59,7 @@ public class WeightFragment extends Fragment {
         calendar.setMinimalDaysInFirstWeek(4); // this needs to be set aswell
         calendar.setTimeInMillis(System.currentTimeMillis());
         week = calendar.get(Calendar.WEEK_OF_YEAR);
-        month = calendar.get(Calendar.MONTH);
+        yearMonth = YearMonth.now();
 
         SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(() -> weightViewModel.loadWeights());
@@ -124,11 +125,10 @@ public class WeightFragment extends Fragment {
         Button lineChartMonth = view.findViewById(R.id.button_chart_month);
         lineChartMonth.setOnClickListener(v -> {
             if (displayMode != DisplayMode.MONTH) {
-                calendar.setTimeInMillis(System.currentTimeMillis());
-                month = calendar.get(Calendar.MONTH);
-                setupLineChartMonth(month);
+                yearMonth = YearMonth.now();
+                setupLineChartMonth(yearMonth);
+                displayMode = DisplayMode.MONTH;
             }
-            displayMode = DisplayMode.MONTH;
         });
 
         Button lineChartPrev = view.findViewById(R.id.button_chart_prev);
@@ -139,10 +139,8 @@ public class WeightFragment extends Fragment {
                 }
                 setupLineChartWeek(week);
             } else if (displayMode == DisplayMode.MONTH) {
-                if (month > 0) {
-                    month -= 1;
-                }
-                setupLineChartMonth(month);
+                yearMonth = yearMonth.minusMonths(1);
+                setupLineChartMonth(yearMonth);
             }
         });
         Button lineChartNext = view.findViewById(R.id.button_chart_next);
@@ -151,8 +149,8 @@ public class WeightFragment extends Fragment {
                 week += 1;
                 setupLineChartWeek(week);
             } else if (displayMode == DisplayMode.MONTH) {
-                month += 1;
-                setupLineChartMonth(month);
+                yearMonth = yearMonth.plusMonths(1);
+                setupLineChartMonth(yearMonth);
             }
         });
 
@@ -304,7 +302,7 @@ public class WeightFragment extends Fragment {
         lineChart.setExtraOffsets(5, 10, 0, 10);
     }
 
-    private void setupLineChartMonth(int month) {
+    private void setupLineChartMonth(YearMonth yearMonth) {
         LineChart lineChart = getView().findViewById(R.id.line_chart);
 //        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
 
@@ -314,7 +312,7 @@ public class WeightFragment extends Fragment {
 
         for (int i = 0; i < adapter.weights.size(); i++) {
             WeightDto dto = adapter.weights.get(i);
-            if (dto.getMonth() == month) {
+            if (dto.getMonth() == yearMonth.getMonth().getValue() && dto.getYear() == yearMonth.getYear()) {
                 if (i - 1 >= 0 && yVals.size() == 0) {
                     yVals.add(new Entry(0, (float) adapter.weights.get(i - 1).getWeightInKgs()));
                 }
@@ -331,7 +329,7 @@ public class WeightFragment extends Fragment {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(5);
         xAxis.setAxisMinimum(0.75f);
-        float max = 31 + 0.25f;
+        float max = yearMonth.lengthOfMonth() + 0.25f;
         xAxis.setAxisMaximum(max);
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
