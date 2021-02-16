@@ -49,6 +49,8 @@ public class WeightFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(Calendar.MONDAY); // this causes trouble if not explicitly set
+        calendar.setMinimalDaysInFirstWeek(4); // this needs to be set aswell
         calendar.setTimeInMillis(System.currentTimeMillis());
         week = calendar.get(Calendar.WEEK_OF_YEAR);
         month = calendar.get(Calendar.MONTH);
