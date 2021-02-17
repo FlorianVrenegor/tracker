@@ -12,23 +12,21 @@ import com.example.tracker.R;
 
 public class TimeBoxViewHolder extends RecyclerView.ViewHolder {
 
-    private final TextView taskTextView;
+    private final TextView startedTextView;
+    private final TextView descriptionTextView;
     private final TextView durationTextView;
 
     public TimeBoxViewHolder(@NonNull View itemView) {
         super(itemView);
-        taskTextView = itemView.findViewById(R.id.task_text_view);
+        startedTextView = itemView.findViewById(R.id.started_text_view);
+        descriptionTextView = itemView.findViewById(R.id.description_text_view);
         durationTextView = itemView.findViewById(R.id.duration_text_view);
     }
 
     public void bind(TimeBoxDto timeBox) {
-        taskTextView.setText(timeBox.getDescription());
-
-        long durationInMilliseconds = timeBox.getDurationInMilliseconds();
-        long durationInSeconds = durationInMilliseconds / 1000 % 60;
-        long durationInMinutes = durationInMilliseconds / 60 / 1000;
-        String durationString = "" + durationInMinutes + "m " + (durationInSeconds == 0L ? "" : durationInSeconds + "s"); // Extracted to avoid warning
-        durationTextView.setText(durationString);
+        startedTextView.setText(timeBox.getTimeStartedFormatted());
+        descriptionTextView.setText(timeBox.getDescription());
+        durationTextView.setText(timeBox.getDurationFormatted());
     }
 
     static TimeBoxViewHolder create(ViewGroup parent) {

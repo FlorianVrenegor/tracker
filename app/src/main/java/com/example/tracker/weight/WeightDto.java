@@ -9,7 +9,7 @@ import java.util.Locale;
 
 class WeightDto implements Comparable<WeightDto> {
 
-    private final static String DATE_PATTERN = "dd.MM, HH:mm"; // "yyyy-MM-dd HH:mm"
+    private final static String DATE_PATTERN = "dd.MM HH:mm"; // "yyyy-MM-dd HH:mm"
 
     private final long timeInMillis;
     private final int week;
