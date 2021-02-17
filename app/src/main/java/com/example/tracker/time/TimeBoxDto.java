@@ -1,6 +1,8 @@
 package com.example.tracker.time;
 
-public class TimeBoxDto {
+import androidx.annotation.NonNull;
+
+public class TimeBoxDto implements Comparable<TimeBoxDto> {
 
     private final long timeStartedInMilliseconds;
     private final long durationInMilliseconds;
@@ -22,5 +24,11 @@ public class TimeBoxDto {
 
     public String getDescription() {
         return description;
+    }
+
+    @Override
+    public int compareTo(@NonNull TimeBoxDto other) {
+        long result = getTimeStartedInMilliseconds() - other.getTimeStartedInMilliseconds();
+        return result < 0 ? -1 : result == 0 ? 0 : 1;
     }
 }

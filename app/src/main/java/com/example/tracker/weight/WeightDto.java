@@ -1,5 +1,7 @@
 package com.example.tracker.weight;
 
+import androidx.annotation.NonNull;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -66,11 +68,8 @@ class WeightDto implements Comparable<WeightDto> {
     }
 
     @Override
-    public int compareTo(WeightDto o) {
-        if (o == null) {
-            return 0;
-        }
-        long result = getTimeInMillis() - o.getTimeInMillis();
+    public int compareTo(@NonNull WeightDto other) {
+        long result = getTimeInMillis() - other.getTimeInMillis();
         return result < 0 ? -1 : result == 0 ? 0 : 1;
     }
 }
