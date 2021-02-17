@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager2 viewPager;
     private FragmentStateAdapter pagerAdapter;
 
-    private String[] tabNames = new String[]{"Weight", "Time"};
+    private String[] tabNames = new String[]{"Weight", "Time", "Todo"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
