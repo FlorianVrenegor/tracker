@@ -4,28 +4,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tracker.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoViewHolder> {
 
-    private List<TodoDto> todoDtos = new ArrayList<>();
+    private final List<TodoDto> todoDtos;
 
-    public List<TodoDto> getTodoDtos() {
-        return todoDtos;
-    }
-
-    public void setTodoDtos(List<TodoDto> todoDtos) {
-        this.todoDtos = todoDtos;
-    }
-
-    public TodoListAdapter(List<TodoDto> todoDtos) {
+    public TodoListAdapter(@NonNull List<TodoDto> todoDtos) {
         this.todoDtos = todoDtos;
     }
 
@@ -54,6 +46,9 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
         public TodoViewHolder(@NonNull View itemView) {
             super(itemView);
             todoDescriptionTextView = itemView.findViewById(R.id.todo_description_text_view);
+            todoDescriptionTextView.setOnClickListener(v -> {
+                Toast.makeText(itemView.getContext(), "Item at position: " + this.getAdapterPosition(), Toast.LENGTH_SHORT).show();
+            });
         }
 
         public TextView getTodoDescriptionTextView() {
