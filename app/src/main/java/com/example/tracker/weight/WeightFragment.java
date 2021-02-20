@@ -33,6 +33,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class WeightFragment extends Fragment {
 
@@ -347,10 +348,37 @@ public class WeightFragment extends Fragment {
         Collections.sort(adapter.weights);
         ArrayList<Entry> yVals = new ArrayList<>();
 
+        List<Integer> x = new ArrayList<>();
+        List<Float> y = new ArrayList<>();
+        int xSum = 0;
+        float ySum = 0;
+        float crossDeviationSum = 0;
+        float deviationSum = 0;
+
         for (int i = 0; i < adapter.weights.size(); i++) {
             yVals.add(new Entry(i, (float) adapter.weights.get(i).getWeightInKgs()));
+
+            float yVal = (float) adapter.weights.get(i).getWeightInKgs();
+            x.add(i);
+            y.add(yVal);
+            xSum += i;
+            ySum += yVal;
+            crossDeviationSum += i * yVal;
+            deviationSum += i * i;
         }
 //        yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
+
+        int n = x.size();
+        float xMean = (float) xSum / n;
+        float yMean = ySum / n;
+        float b1 = (crossDeviationSum - n * xMean * yMean) / (deviationSum - n * xMean * xMean);
+        float b0 = yMean - b1 * xMean;
+
+        ArrayList<Entry> yValsRegression = new ArrayList<>();
+
+        for (int i = 0; i < adapter.weights.size(); i++) {
+            yValsRegression.add(new Entry(i, b0 + i * b1));
+        }
 
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -367,6 +395,14 @@ public class WeightFragment extends Fragment {
             }
         });
 
+        LineDataSet regressionDataSet = new LineDataSet(yValsRegression, "Average");
+        regressionDataSet.setDrawCircles(false);
+        regressionDataSet.setLineWidth(2f);
+        regressionDataSet.setDrawValues(false);
+        regressionDataSet.enableDashedLine(50f, 25f, 0f);
+        regressionDataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Has to be set to display dashed line
+        regressionDataSet.setColor(ContextCompat.getColor(getContext(), R.color.colorPrimaryInvert));
+
         LineDataSet dataSet = new LineDataSet(yVals, "Weights");
 //        dataSet.setDrawCircles(false);
         dataSet.setCircleRadius(3f);
@@ -379,7 +415,7 @@ public class WeightFragment extends Fragment {
         dataSet.setFillDrawable(drawable);
 //        dataSet.setFillAlpha(0);
 
-        LineData lineData = new LineData(dataSet);
+        LineData lineData = new LineData(dataSet, regressionDataSet);
 //        lineChart.setXAxisRenderer();
 
         YAxis leftAxis = lineChart.getAxisLeft();
