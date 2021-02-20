@@ -6,8 +6,10 @@ import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +30,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -38,11 +41,15 @@ public class WeightFragment extends Fragment {
         WEEK, MONTH
     }
 
-    private int week = 0;
+    private static final String yearMonthPattern = "MMMM yyyy";
+
+    private YearWeek yearWeek;
     private YearMonth yearMonth;
     private DisplayMode displayMode = DisplayMode.WEEK;
 
     private WeightAdapter adapter;
+
+    private LineChart lineChart;
 
     private WeightViewModel weightViewModel;
 
@@ -57,8 +64,7 @@ public class WeightFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         calendar.setFirstDayOfWeek(Calendar.MONDAY); // this causes trouble if not explicitly set
         calendar.setMinimalDaysInFirstWeek(4); // this needs to be set aswell
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        week = calendar.get(Calendar.WEEK_OF_YEAR);
+        yearWeek = YearWeek.now();
         yearMonth = YearMonth.now();
 
         SwipeRefreshLayout swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
@@ -108,13 +114,17 @@ public class WeightFragment extends Fragment {
             return false;
         });
 
+        TextView lineChartDescription = view.findViewById(R.id.line_chart_description);
+        lineChartDescription.setText(yearWeek.getDayRange());
+
         Button lineChartWeek = view.findViewById(R.id.button_chart_week);
         lineChartWeek.setOnClickListener(v -> {
             if (displayMode != DisplayMode.WEEK) {
                 calendar.setTimeInMillis(System.currentTimeMillis());
-                week = calendar.get(Calendar.WEEK_OF_YEAR);
+                yearWeek = YearWeek.now();
                 displayMode = DisplayMode.WEEK;
             }
+            lineChartDescription.setText(yearWeek.getDayRange());
             setupLineChart();
         });
         Button lineChartMonth = view.findViewById(R.id.button_chart_month);
@@ -123,26 +133,29 @@ public class WeightFragment extends Fragment {
                 yearMonth = YearMonth.now();
                 displayMode = DisplayMode.MONTH;
             }
+            lineChartDescription.setText(yearMonth.format(DateTimeFormatter.ofPattern(yearMonthPattern)));
             setupLineChart();
         });
 
-        Button lineChartPrev = view.findViewById(R.id.button_chart_prev);
-        lineChartPrev.setOnClickListener(v -> {
+        ImageView lineChartNextImageView = view.<ImageView>findViewById(R.id.line_chart_navigate_next);
+        lineChartNextImageView.setOnClickListener(v -> {
             if (displayMode == DisplayMode.WEEK) {
-                if (week > 0) {
-                    week -= 1;
-                }
+                yearWeek.plusWeek();
+                lineChartDescription.setText(yearWeek.getDayRange());
             } else if (displayMode == DisplayMode.MONTH) {
-                yearMonth = yearMonth.minusMonths(1);
+                yearMonth = yearMonth.plusMonths(1);
+                lineChartDescription.setText(yearMonth.format(DateTimeFormatter.ofPattern(yearMonthPattern)));
             }
             setupLineChart();
         });
-        Button lineChartNext = view.findViewById(R.id.button_chart_next);
-        lineChartNext.setOnClickListener(v -> {
+        ImageView lineChartBeforeImageView = view.findViewById(R.id.line_chart_navigate_before);
+        lineChartBeforeImageView.setOnClickListener(v -> {
             if (displayMode == DisplayMode.WEEK) {
-                week += 1;
+                yearWeek.minusWeek();
+                lineChartDescription.setText(yearWeek.getDayRange());
             } else if (displayMode == DisplayMode.MONTH) {
-                yearMonth = yearMonth.plusMonths(1);
+                yearMonth = yearMonth.minusMonths(1);
+                lineChartDescription.setText(yearMonth.format(DateTimeFormatter.ofPattern(yearMonthPattern)));
             }
             setupLineChart();
         });
@@ -155,20 +168,19 @@ public class WeightFragment extends Fragment {
         });
 
         weightViewModel.loadWeights();
+
+        lineChart = view.findViewById(R.id.line_chart);
     }
 
     private void setupLineChart() {
         if (displayMode == DisplayMode.WEEK) {
-            setupLineChartWeek(week);
+            setupLineChartWeek(yearWeek);
         } else if (displayMode == DisplayMode.MONTH) {
             setupLineChartMonth(yearMonth);
         }
     }
 
-    private void setupLineChartWeek(int week) {
-        LineChart lineChart = getView().findViewById(R.id.line_chart);
-//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
-
+    private void setupLineChartWeek(YearWeek yearWeek) {
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1); // only intervals of 1 day
@@ -194,7 +206,7 @@ public class WeightFragment extends Fragment {
 
         for (int i = 0; i < adapter.weights.size(); i++) {
             WeightDto dto = adapter.weights.get(i);
-            if (dto.getWeek() == week) {
+            if (dto.getWeek() == yearWeek.getWeek()) {
                 if (i > 0 && yVals.size() == 0) {
                     yVals.add(new Entry(-1, (float) adapter.weights.get(i - 1).getWeightInKgs()));
                     hasBefore = true;
@@ -255,11 +267,7 @@ public class WeightFragment extends Fragment {
     }
 
     private void setupLineChartMonth(YearMonth yearMonth) {
-        LineChart lineChart = getView().findViewById(R.id.line_chart);
-//        lineChart.setViewPortOffsets(-40f, 0f, 0f, 0f);
-
         Collections.sort(adapter.weights);
-
         ArrayList<Entry> yVals = new ArrayList<>();
 
         for (int i = 0; i < adapter.weights.size(); i++) {

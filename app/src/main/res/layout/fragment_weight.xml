@@ -15,11 +15,6 @@
             android:background="@color/light_gray"
             android:orientation="vertical">
 
-            <!--        android:layout_marginLeft="10dp"-->
-            <!--        android:layout_marginTop="10dp"-->
-            <!--        android:layout_marginRight="10dp"-->
-            <!--        android:layout_marginBottom="10dp"-->
-            <!--        android:background="@drawable/shape_white_rounded_corners"-->
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/line_chart"
                 android:layout_width="match_parent"
@@ -27,41 +22,66 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp">
 
-                <Button
-                    android:id="@+id/button_chart_week"
+                <ImageView
+                    android:id="@+id/line_chart_navigate_before"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Woche" />
+                    android:contentDescription="LineChart navigate before"
+                    android:src="@drawable/ic_navigate_before" />
 
-                <Button
-                    android:id="@+id/button_chart_month"
+                <TextView
+                    android:id="@+id/line_chart_description"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Description" />
+
+                <ImageView
+                    android:id="@+id/line_chart_navigate_next"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Monat" />
+                    android:contentDescription="LineChart navigate next"
+                    android:src="@drawable/ic_navigate_next" />
 
             </LinearLayout>
 
             <LinearLayout
+                style="?android:buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <Button
-                    android:id="@+id/button_chart_prev"
+                    android:id="@+id/button_chart_week"
+                    style="?android:buttonBarButtonStyle"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_weight="1"
-                    android:text="Prev" />
+                    android:background="@drawable/shape_primary_rounded_corners"
+                    android:text="Woche"
+                    android:textColor="@color/white" />
 
                 <Button
-                    android:id="@+id/button_chart_next"
+                    android:id="@+id/button_chart_month"
+                    style="?android:buttonBarButtonStyle"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="10dp"
                     android:layout_weight="1"
-                    android:text="Next" />
+                    android:background="@drawable/shape_primary_rounded_corners"
+                    android:text="Monat"
+                    android:textColor="@color/white" />
 
             </LinearLayout>
 
@@ -93,6 +113,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:layout_margin="20dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:contentDescription="Add Weight"
         android:src="@drawable/ic_add"
         app:fabSize="normal" />
 
