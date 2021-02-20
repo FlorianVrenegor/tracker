@@ -382,10 +382,8 @@ public class WeightFragment extends Fragment {
 
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(5);
-        xAxis.setAxisMinimum(0.75f);
-        float max = yVals.size() - 1 + 0.25f;
-        xAxis.setAxisMaximum(max);
+        xAxis.setAxisMinimum(-0.25f);
+        xAxis.setAxisMaximum(yVals.size() - 1 + 0.25f);
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter(new ValueFormatter() {
