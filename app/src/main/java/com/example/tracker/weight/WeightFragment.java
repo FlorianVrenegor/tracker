@@ -356,7 +356,7 @@ public class WeightFragment extends Fragment {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(5);
         xAxis.setAxisMinimum(0.75f);
-        float max = yVals.size() + 0.25f;
+        float max = yVals.size() - 1 + 0.25f;
         xAxis.setAxisMaximum(max);
         xAxis.setDrawAxisLine(false);
         xAxis.setDrawGridLines(false);
