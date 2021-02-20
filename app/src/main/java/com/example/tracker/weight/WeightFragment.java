@@ -32,7 +32,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 
 public class WeightFragment extends Fragment {
@@ -61,9 +60,6 @@ public class WeightFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setFirstDayOfWeek(Calendar.MONDAY); // this causes trouble if not explicitly set
-        calendar.setMinimalDaysInFirstWeek(4); // this needs to be set aswell
         yearWeek = YearWeek.now();
         yearMonth = YearMonth.now();
 
@@ -120,7 +116,6 @@ public class WeightFragment extends Fragment {
         Button lineChartWeek = view.findViewById(R.id.button_chart_week);
         lineChartWeek.setOnClickListener(v -> {
             if (displayMode != DisplayMode.WEEK) {
-                calendar.setTimeInMillis(System.currentTimeMillis());
                 yearWeek = YearWeek.now();
                 displayMode = DisplayMode.WEEK;
             }
@@ -212,11 +207,7 @@ public class WeightFragment extends Fragment {
                     hasBefore = true;
                 }
 
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(dto.getTimeInMillis());
-                int weekday = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
-
-                yVals.add(new Entry(weekday, (float) dto.getWeightInKgs()));
+                yVals.add(new Entry(dto.getDayOfWeek(), (float) dto.getWeightInKgs()));
 
                 if (adapter.weights.size() > i + 1 && yVals.size() == (hasBefore ? 8 : 7)) {
                     WeightDto dto2 = adapter.weights.get(i + 1);

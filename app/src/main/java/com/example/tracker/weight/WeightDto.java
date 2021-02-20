@@ -39,6 +39,12 @@ class WeightDto implements Comparable<WeightDto> {
         return week;
     }
 
+    public int getDayOfWeek() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(this.getTimeInMillis());
+        return (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7; // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+    }
+
     public int getMonth() {
         return month;
     }
