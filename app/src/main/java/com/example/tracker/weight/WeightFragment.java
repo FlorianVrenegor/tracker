@@ -37,7 +37,7 @@ import java.util.Collections;
 public class WeightFragment extends Fragment {
 
     enum DisplayMode {
-        WEEK, MONTH
+        NONE, WEEK, MONTH
     }
 
     private static final String yearMonthPattern = "MMMM yyyy";
@@ -110,6 +110,7 @@ public class WeightFragment extends Fragment {
             return false;
         });
 
+        LinearLayout lineChartNavigateBar = view.findViewById(R.id.line_chart_navigate_bar);
         TextView lineChartDescription = view.findViewById(R.id.line_chart_description);
         lineChartDescription.setText(yearWeek.getDayRange());
 
@@ -120,6 +121,7 @@ public class WeightFragment extends Fragment {
                 displayMode = DisplayMode.WEEK;
             }
             lineChartDescription.setText(yearWeek.getDayRange());
+            lineChartNavigateBar.setVisibility(View.VISIBLE);
             setupLineChart();
         });
         Button lineChartMonth = view.findViewById(R.id.button_chart_month);
@@ -129,10 +131,17 @@ public class WeightFragment extends Fragment {
                 displayMode = DisplayMode.MONTH;
             }
             lineChartDescription.setText(yearMonth.format(DateTimeFormatter.ofPattern(yearMonthPattern)));
+            lineChartNavigateBar.setVisibility(View.VISIBLE);
             setupLineChart();
         });
+        Button lineChartAll = view.findViewById(R.id.button_chart_all);
+        lineChartAll.setOnClickListener(v -> {
+            displayMode = DisplayMode.NONE;
+            lineChartNavigateBar.setVisibility(View.GONE);
+            setupLineChartAll();
+        });
 
-        ImageView lineChartNextImageView = view.<ImageView>findViewById(R.id.line_chart_navigate_next);
+        ImageView lineChartNextImageView = view.findViewById(R.id.line_chart_navigate_next);
         lineChartNextImageView.setOnClickListener(v -> {
             if (displayMode == DisplayMode.WEEK) {
                 yearWeek.plusWeek();
@@ -172,6 +181,8 @@ public class WeightFragment extends Fragment {
             setupLineChartWeek(yearWeek);
         } else if (displayMode == DisplayMode.MONTH) {
             setupLineChartMonth(yearMonth);
+        } else if (displayMode == DisplayMode.NONE) {
+            setupLineChartAll();
         }
     }
 
@@ -237,9 +248,11 @@ public class WeightFragment extends Fragment {
 
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setDrawAxisLine(false);
-        leftAxis.setGranularity(0.5f);
+        leftAxis.setGranularity(1f);
 //        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
-        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+//        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+        leftAxis.setAxisMinimum(85 - 0.25f);
+        leftAxis.setAxisMaximum(90 + 0.25f);
 
         YAxis rightAxis = lineChart.getAxisRight();
         rightAxis.setDrawAxisLine(false);
@@ -310,7 +323,72 @@ public class WeightFragment extends Fragment {
         leftAxis.setDrawAxisLine(false);
         leftAxis.setGranularity(0.5f);
 //        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
-        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+//        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+        leftAxis.setAxisMinimum(85 - 0.25f);
+        leftAxis.setAxisMaximum(90 + 0.25f);
+
+        YAxis rightAxis = lineChart.getAxisRight();
+        rightAxis.setDrawAxisLine(false);
+        rightAxis.setDrawLabels(false);
+        rightAxis.setDrawGridLines(false);
+//        rightAxis.setAxisLineWidth(0);
+//        rightAxis.setXOffset(-5f);
+
+        lineChart.getDescription().setEnabled(false);
+        lineChart.getLegend().setEnabled(false);
+        lineChart.setData(lineData);
+        lineChart.setTouchEnabled(false);
+        lineChart.invalidate(); // So the chart refreshes and you don't have to click it
+
+        lineChart.setExtraOffsets(5, 10, 0, 10);
+    }
+
+    private void setupLineChartAll() {
+        Collections.sort(adapter.weights);
+        ArrayList<Entry> yVals = new ArrayList<>();
+
+        for (int i = 0; i < adapter.weights.size(); i++) {
+            yVals.add(new Entry(i, (float) adapter.weights.get(i).getWeightInKgs()));
+        }
+//        yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
+
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(5);
+        xAxis.setAxisMinimum(0.75f);
+        float max = yVals.size() + 0.25f;
+        xAxis.setAxisMaximum(max);
+        xAxis.setDrawAxisLine(false);
+        xAxis.setDrawGridLines(false);
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return Math.round(value) + "";
+            }
+        });
+
+        LineDataSet dataSet = new LineDataSet(yVals, "Weights");
+//        dataSet.setDrawCircles(false);
+        dataSet.setCircleRadius(3f);
+        dataSet.setDrawCircleHole(false);
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawValues(false);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // For smooth curve
+        dataSet.setDrawFilled(true);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.gradient_linechart_background);
+        dataSet.setFillDrawable(drawable);
+//        dataSet.setFillAlpha(0);
+
+        LineData lineData = new LineData(dataSet);
+//        lineChart.setXAxisRenderer();
+
+        YAxis leftAxis = lineChart.getAxisLeft();
+        leftAxis.setDrawAxisLine(false);
+        leftAxis.setGranularity(0.5f);
+//        leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
+//        leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
+        leftAxis.setAxisMinimum(85 - 0.25f);
+        leftAxis.setAxisMaximum(90 + 0.25f);
 
         YAxis rightAxis = lineChart.getAxisRight();
         rightAxis.setDrawAxisLine(false);
