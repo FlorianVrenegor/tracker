@@ -33,6 +33,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class WeightFragment extends Fragment {
@@ -185,6 +186,7 @@ public class WeightFragment extends Fragment {
         } else if (displayMode == DisplayMode.NONE) {
             setupLineChartAll();
         }
+        adapter.weights.sort(Comparator.reverseOrder());
     }
 
     private void setupLineChartWeek(YearWeek yearWeek) {
@@ -438,5 +440,6 @@ public class WeightFragment extends Fragment {
         lineChart.invalidate(); // So the chart refreshes and you don't have to click it
 
         lineChart.setExtraOffsets(5, 10, 0, 10);
+        adapter.weights.sort(Comparator.reverseOrder());
     }
 }
