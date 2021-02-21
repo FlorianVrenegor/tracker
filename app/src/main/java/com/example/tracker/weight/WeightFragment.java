@@ -1,7 +1,6 @@
 package com.example.tracker.weight;
 
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -30,17 +29,11 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
 
 public class WeightFragment extends Fragment {
 
@@ -67,34 +60,6 @@ public class WeightFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                try {
-                    // this is so we don't have to touch the hosts.txt file on the android device
-                    HttpsURLConnection.setDefaultHostnameVerifier((s, sslSession) -> "192.168.0.110".equals(s));
-
-                    URL url = new URL("https://192.168.0.110:5000");
-                    HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-
-                    BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                    String inputLine;
-                    StringBuilder content = new StringBuilder();
-                    while ((inputLine = in.readLine()) != null) {
-                        content.append(inputLine);
-                    }
-
-                    in.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        }.execute();
-
 
         yearWeek = YearWeek.now();
         yearMonth = YearMonth.now();

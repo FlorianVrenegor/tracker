@@ -20,6 +20,8 @@ public class WeightViewModel extends AndroidViewModel {
     private static final String FIRESTORE_LOG_TAG = "Firestore";
     private static final String FIRESTORE_COLLECTION_WEIGHTS = "weights";
 
+    private RestRepository restRepository = new RestRepository();
+
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private final List<WeightDto> weightDtos = new ArrayList<>();
@@ -55,6 +57,8 @@ public class WeightViewModel extends AndroidViewModel {
     }
 
     public void loadWeights() {
+//        weights.setValue(restRepository.loadWeights());
+
         db.collection(FIRESTORE_COLLECTION_WEIGHTS)
                 .get()
                 .addOnCompleteListener(task -> {
