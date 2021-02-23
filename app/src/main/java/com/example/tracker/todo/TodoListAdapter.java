@@ -1,5 +1,6 @@
 package com.example.tracker.todo;
 
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,10 +50,19 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
 
         private final TextView todoDescriptionTextView;
 
+        private boolean strikeThrough = false;
+
         public TodoViewHolder(@NonNull View itemView) {
             super(itemView);
             todoDescriptionTextView = itemView.findViewById(R.id.todo_description_text_view);
             todoDescriptionTextView.setOnClickListener(v -> {
+                if (strikeThrough) {
+                    todoDescriptionTextView.setPaintFlags(todoDescriptionTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                    strikeThrough = false;
+                } else {
+                    todoDescriptionTextView.setPaintFlags(todoDescriptionTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                    strikeThrough = true;
+                }
                 Toast.makeText(itemView.getContext(), "Item at position: " + this.getAdapterPosition(), Toast.LENGTH_SHORT).show();
             });
         }
