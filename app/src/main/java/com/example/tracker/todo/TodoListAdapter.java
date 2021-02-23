@@ -21,6 +21,12 @@ public class TodoListAdapter extends RecyclerView.Adapter<TodoListAdapter.TodoVi
         this.todoDtos = todoDtos;
     }
 
+    public void setTodoDtos(List<TodoDto> todoDtos) {
+        this.todoDtos.clear();
+        this.todoDtos.addAll(todoDtos);
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public TodoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
