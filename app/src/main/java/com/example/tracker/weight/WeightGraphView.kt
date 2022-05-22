@@ -136,8 +136,8 @@ class WeightGraphView @JvmOverloads constructor(
         weights.sortWith(Comparator.reverseOrder())
     }
 
-    private fun setupLineChartWeek(yearWeek: YearWeek?) {
-        val xAxis = lineChart!!.xAxis
+    private fun setupLineChartWeek(yearWeek: YearWeek) {
+        val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.granularity = 1f // only intervals of 1 day
         xAxis.labelCount = 7
@@ -151,12 +151,13 @@ class WeightGraphView @JvmOverloads constructor(
                 return days[value.toInt() % 7]
             }
         }
+
         val yVals = ArrayList<Entry>()
         weights.sort()
         var hasBefore = false
         for (i in weights.indices) {
             val dto = weights[i]
-            if (dto.week == yearWeek!!.week) {
+            if (dto.week == yearWeek.week && dto.year == yearWeek.year) {
                 if (i > 0 && yVals.size == 0) {
                     yVals.add(Entry(-1f, weights[i - 1].weightInKgs.toFloat()))
                     hasBefore = true
@@ -172,6 +173,7 @@ class WeightGraphView @JvmOverloads constructor(
         }
         weights.sortWith(Collections.reverseOrder())
         yVals.sortWith { e1: Entry, e2: Entry -> (e1.x - e2.x).toInt() }
+
         val dataSet = LineDataSet(yVals, "Weights")
         // dataSet.setDrawCircles(false);
         dataSet.circleRadius = 3f
@@ -182,36 +184,42 @@ class WeightGraphView @JvmOverloads constructor(
         dataSet.setDrawFilled(true)
         val drawable = ContextCompat.getDrawable(context!!, R.drawable.gradient_linechart_background)
         dataSet.fillDrawable = drawable
+
         // dataSet.setFillAlpha(0);
         val lineData = LineData(dataSet)
         // lineChart.setXAxisRenderer();
-        val leftAxis = lineChart!!.axisLeft
+
+        val leftAxis = lineChart.axisLeft
         leftAxis.setDrawAxisLine(false)
         leftAxis.granularity = 1f
         // leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
         // leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
-        leftAxis.axisMinimum = 85 - 0.25f
-        leftAxis.axisMaximum = 90 + 0.25f
-        val rightAxis = lineChart!!.axisRight
+        val minWeight = weights.map { it.weightInKgs.toFloat() }.minOrNull() ?: 0f
+        val maxWeight = weights.map { it.weightInKgs.toFloat() }.maxOrNull() ?: 100f
+        leftAxis.axisMinimum = minWeight - 0.25f
+        leftAxis.axisMaximum = maxWeight + 0.25f
+
+        val rightAxis = lineChart.axisRight
         rightAxis.setDrawAxisLine(false)
         rightAxis.setDrawLabels(false)
         rightAxis.setDrawGridLines(false)
         // rightAxis.setAxisLineWidth(0);
         // rightAxis.setXOffset(-5f);
-        lineChart!!.description.isEnabled = false
-        lineChart!!.legend.isEnabled = false
-        lineChart!!.data = lineData
-        lineChart!!.setTouchEnabled(false)
-        lineChart!!.invalidate() // So the chart refreshes and you don't have to click it
-        lineChart!!.setExtraOffsets(5f, 10f, 0f, 10f)
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.data = lineData
+        lineChart.setTouchEnabled(false)
+        lineChart.invalidate() // So the chart refreshes and you don't have to click it
+        lineChart.setExtraOffsets(5f, 10f, 0f, 10f)
     }
 
-    private fun setupLineChartMonth(yearMonth: YearMonth?) {
+    private fun setupLineChartMonth(yearMonth: YearMonth) {
         weights.sort()
         val yVals = ArrayList<Entry>()
         for (i in weights.indices) {
             val dto = weights[i]
-            if (dto.month == yearMonth!!.month.value && dto.year == yearMonth.year) {
+            if (dto.month == yearMonth.month.value && dto.year == yearMonth.year) {
                 if (i - 1 >= 0 && yVals.size == 0) {
                     yVals.add(Entry(0f, weights[i - 1].weightInKgs.toFloat()))
                 }
@@ -221,12 +229,13 @@ class WeightGraphView @JvmOverloads constructor(
                 }
             }
         }
+
         // yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
-        val xAxis = lineChart!!.xAxis
+        val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.granularity = 5f
         xAxis.axisMinimum = 0.75f
-        val max = yearMonth!!.lengthOfMonth() + 0.25f
+        val max = yearMonth.lengthOfMonth() + 0.25f
         xAxis.axisMaximum = max
         xAxis.setDrawAxisLine(false)
         xAxis.setDrawGridLines(false)
@@ -235,6 +244,7 @@ class WeightGraphView @JvmOverloads constructor(
                 return value.roundToLong().toString() + ""
             }
         }
+
         val dataSet = LineDataSet(yVals, "Weights")
         // dataSet.setDrawCircles(false);
         dataSet.circleRadius = 3f
@@ -246,27 +256,33 @@ class WeightGraphView @JvmOverloads constructor(
         val drawable = ContextCompat.getDrawable(context!!, R.drawable.gradient_linechart_background)
         dataSet.fillDrawable = drawable
         // dataSet.setFillAlpha(0);
+
         val lineData = LineData(dataSet)
         // lineChart.setXAxisRenderer();
-        val leftAxis = lineChart!!.axisLeft
+
+        val leftAxis = lineChart.axisLeft
         leftAxis.setDrawAxisLine(false)
         leftAxis.granularity = 0.5f
         // leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
         // leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
-        leftAxis.axisMinimum = 85 - 0.25f
-        leftAxis.axisMaximum = 90 + 0.25f
-        val rightAxis = lineChart!!.axisRight
+        val minWeight = weights.map { it.weightInKgs.toFloat() }.minOrNull() ?: 0f
+        val maxWeight = weights.map { it.weightInKgs.toFloat() }.maxOrNull() ?: 100f
+        leftAxis.axisMinimum = minWeight - 0.25f
+        leftAxis.axisMaximum = maxWeight + 0.25f
+
+        val rightAxis = lineChart.axisRight
         rightAxis.setDrawAxisLine(false)
         rightAxis.setDrawLabels(false)
         rightAxis.setDrawGridLines(false)
         // rightAxis.setAxisLineWidth(0);
         // rightAxis.setXOffset(-5f);
-        lineChart!!.description.isEnabled = false
-        lineChart!!.legend.isEnabled = false
-        lineChart!!.data = lineData
-        lineChart!!.setTouchEnabled(false)
-        lineChart!!.invalidate() // So the chart refreshes and you don't have to click it
-        lineChart!!.setExtraOffsets(5f, 10f, 0f, 10f)
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.data = lineData
+        lineChart.setTouchEnabled(false)
+        lineChart.invalidate() // So the chart refreshes and you don't have to click it
+        lineChart.setExtraOffsets(5f, 10f, 0f, 10f)
     }
 
     private fun setupLineChartAll() {
@@ -298,7 +314,8 @@ class WeightGraphView @JvmOverloads constructor(
         for (i in weights.indices) {
             yValsRegression.add(Entry(i.toFloat(), b0 + i * b1))
         }
-        val xAxis = lineChart!!.xAxis
+
+        val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.axisMinimum = -0.25f
         xAxis.axisMaximum = yVals.size - 1 + 0.25f
@@ -309,6 +326,7 @@ class WeightGraphView @JvmOverloads constructor(
                 return value.roundToLong().toString() + ""
             }
         }
+
         val regressionDataSet = LineDataSet(yValsRegression, "Average")
         regressionDataSet.setDrawCircles(false)
         regressionDataSet.lineWidth = 2f
@@ -316,6 +334,7 @@ class WeightGraphView @JvmOverloads constructor(
         regressionDataSet.enableDashedLine(50f, 25f, 0f)
         regressionDataSet.mode = LineDataSet.Mode.CUBIC_BEZIER // Has to be set to display dashed line
         regressionDataSet.color = ContextCompat.getColor(context!!, R.color.colorPrimaryInvert)
+
         val dataSet = LineDataSet(yVals, "Weights")
         // dataSet.setDrawCircles(false);
         dataSet.circleRadius = 3f
@@ -327,27 +346,34 @@ class WeightGraphView @JvmOverloads constructor(
         val drawable = ContextCompat.getDrawable(context!!, R.drawable.gradient_linechart_background)
         dataSet.fillDrawable = drawable
         // dataSet.setFillAlpha(0);
+
         val lineData = LineData(dataSet, regressionDataSet)
         // lineChart.setXAxisRenderer();
-        val leftAxis = lineChart!!.axisLeft
+
+        val leftAxis = lineChart.axisLeft
         leftAxis.setDrawAxisLine(false)
         leftAxis.granularity = 0.5f
         // leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
         // leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
-        leftAxis.axisMinimum = 85 - 0.25f
-        leftAxis.axisMaximum = 90 + 0.25f
-        val rightAxis = lineChart!!.axisRight
+        val minWeight = weights.map { it.weightInKgs.toFloat() }.minOrNull() ?: 0f
+        val maxWeight = weights.map { it.weightInKgs.toFloat() }.maxOrNull() ?: 100f
+        leftAxis.axisMinimum = minWeight - 0.25f
+        leftAxis.axisMaximum = maxWeight + 0.25f
+
+        val rightAxis = lineChart.axisRight
         rightAxis.setDrawAxisLine(false)
         rightAxis.setDrawLabels(false)
         rightAxis.setDrawGridLines(false)
         // rightAxis.setAxisLineWidth(0);
         // rightAxis.setXOffset(-5f);
-        lineChart!!.description.isEnabled = false
-        lineChart!!.legend.isEnabled = false
-        lineChart!!.data = lineData
-        lineChart!!.setTouchEnabled(false)
-        lineChart!!.invalidate() // So the chart refreshes and you don't have to click it
-        lineChart!!.setExtraOffsets(5f, 10f, 0f, 10f)
+
+        lineChart.description.isEnabled = false
+        lineChart.legend.isEnabled = false
+        lineChart.data = lineData
+        lineChart.setTouchEnabled(false)
+        lineChart.invalidate() // So the chart refreshes and you don't have to click it
+        lineChart.setExtraOffsets(5f, 10f, 0f, 10f)
+
         weights.sortWith(Comparator.reverseOrder())
     }
 

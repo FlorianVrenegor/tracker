@@ -21,6 +21,9 @@ class YearWeek(calendar: Calendar) {
     val week: Int
         get() = calendar[Calendar.WEEK_OF_YEAR]
 
+    val year: Int
+        get() = calendar[Calendar.YEAR]
+
     fun plusWeek() {
         calendar.add(Calendar.WEEK_OF_YEAR, 1)
     }
