@@ -1,46 +1,47 @@
-package com.example.tracker.weight;
+package com.example.tracker.weight
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
-public class YearWeek {
+class YearWeek(calendar: Calendar) {
 
-    private static final String DATE_PATTERN = "dd.MM.";
+    private val calendar: Calendar
 
-    private final Calendar calendar;
+    val dayRange: String
+        get() {
+            val simpleDateFormat = SimpleDateFormat(DATE_PATTERN, Locale.GERMANY)
+            val firstDay = simpleDateFormat.format(calendar.time)
+            calendar.add(Calendar.DATE, 6)
+            val lastDay = simpleDateFormat.format(calendar.time)
+            calendar.add(Calendar.DATE, -6)
+            return "$firstDay - $lastDay"
+        }
 
-    public YearWeek(Calendar calendar) {
-        int dayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7;
-        calendar.add(Calendar.DATE, -1 * dayOfWeek);
-        this.calendar = calendar;
+    val week: Int
+        get() = calendar[Calendar.WEEK_OF_YEAR]
+
+    fun plusWeek() {
+        calendar.add(Calendar.WEEK_OF_YEAR, 1)
     }
 
-    public static YearWeek now() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setFirstDayOfWeek(Calendar.MONDAY);
-        calendar.setMinimalDaysInFirstWeek(4);
-        return new YearWeek(calendar);
+    fun minusWeek() {
+        calendar.add(Calendar.WEEK_OF_YEAR, -1)
     }
 
-    public void plusWeek() {
-        calendar.add(Calendar.WEEK_OF_YEAR, 1);
+    companion object {
+        private const val DATE_PATTERN = "dd.MM."
+        fun now(): YearWeek {
+            val calendar = Calendar.getInstance()
+            calendar.firstDayOfWeek = Calendar.MONDAY
+            calendar.minimalDaysInFirstWeek = 4
+            return YearWeek(calendar)
+        }
     }
 
-    public void minusWeek() {
-        calendar.add(Calendar.WEEK_OF_YEAR, -1);
-    }
-
-    public String getDayRange() {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_PATTERN, Locale.GERMANY);
-        String firstDay = simpleDateFormat.format(calendar.getTime());
-        calendar.add(Calendar.DATE, 6);
-        String lastDay = simpleDateFormat.format(calendar.getTime());
-        calendar.add(Calendar.DATE, -6);
-        return firstDay + " - " + lastDay;
-    }
-
-    public int getWeek() {
-        return calendar.get(Calendar.WEEK_OF_YEAR);
+    init {
+        val dayOfWeek = (calendar[Calendar.DAY_OF_WEEK] + 5) % 7
+        calendar.add(Calendar.DATE, -1 * dayOfWeek)
+        this.calendar = calendar
     }
 }
