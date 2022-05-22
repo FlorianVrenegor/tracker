@@ -3,6 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/flori/AndroidStudioProjects/tracker/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.32222222222222224" />
+        <entry key="..\:/Users/flori/AndroidStudioProjects/tracker/app/src/main/res/drawable/ic_body_scale.xml" value="0.32222222222222224" />
+        <entry key="..\:/Users/flori/AndroidStudioProjects/tracker/app/src/main/res/drawable/ic_launcher_scale_foreground.xml" value="0.32222222222222224" />
         <entry key="..\:/Users/flori/AndroidStudioProjects/tracker/app/src/main/res/layout/fragment_main.xml" value="0.24094202898550723" />
       </map>
     </option>
