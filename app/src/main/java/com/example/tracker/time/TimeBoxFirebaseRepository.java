@@ -20,7 +20,7 @@ public class TimeBoxFirebaseRepository {
 
     private final static String FIREBASE_COLLECTION = "timeBoxes";
 
-    MutableLiveData<List<TimeBoxDto>> timeBoxDtos = new MutableLiveData();
+    MutableLiveData<List<TimeBoxDto>> timeBoxDtos = new MutableLiveData<>();
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
