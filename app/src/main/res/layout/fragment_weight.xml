@@ -15,92 +15,9 @@
             android:background="@color/light_gray"
             android:orientation="vertical">
 
-            <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/line_chart"
+            <com.example.tracker.weight.WeightGraphView
                 android:layout_width="match_parent"
-                android:layout_height="200dp" />
-
-            <LinearLayout
-                android:id="@+id/line_chart_navigate_bar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp">
-
-                <ImageView
-                    android:id="@+id/line_chart_navigate_before"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/ripple_transparent"
-                    android:contentDescription="LineChart navigate before"
-                    android:src="@drawable/ic_navigate_before" />
-
-                <TextView
-                    android:id="@+id/line_chart_description"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="Description" />
-
-                <ImageView
-                    android:id="@+id/line_chart_navigate_next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/ripple_transparent"
-                    android:contentDescription="LineChart navigate next"
-                    android:src="@drawable/ic_navigate_next" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                style="?android:buttonBarStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:id="@+id/button_chart_week"
-                    style="?android:buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginEnd="5dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/ripple_primary_rounded_corners"
-                    android:text="Woche"
-                    android:textColor="@color/white" />
-
-                <Button
-                    android:id="@+id/button_chart_month"
-                    style="?android:buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginEnd="5dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/ripple_primary_rounded_corners"
-                    android:text="Monat"
-                    android:textColor="@color/white" />
-
-                <Button
-                    android:id="@+id/button_chart_all"
-                    style="?android:buttonBarButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginBottom="10dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/ripple_primary_rounded_corners"
-                    android:text="All"
-                    android:textColor="@color/white" />
-
-            </LinearLayout>
+                android:layout_height="wrap_content" />
 
             <TextView
                 android:layout_width="match_parent"
