@@ -36,9 +36,9 @@ class WeightGraphView @JvmOverloads constructor(
     private lateinit var yearMonth: YearMonth
     private lateinit var weights: ArrayList<WeightDto>
     private lateinit var weightViewModel: WeightViewModel
+    private lateinit var lineChart: LineChart
 
     private var displayMode = DisplayMode.WEEK
-    private var lineChart: LineChart? = null
 
     private fun initializeViews() {
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
