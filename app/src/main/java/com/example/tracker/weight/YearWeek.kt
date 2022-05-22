@@ -31,6 +31,7 @@ class YearWeek(calendar: Calendar) {
 
     companion object {
         private const val DATE_PATTERN = "dd.MM."
+
         fun now(): YearWeek {
             val calendar = Calendar.getInstance()
             calendar.firstDayOfWeek = Calendar.MONDAY
