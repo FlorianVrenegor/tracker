@@ -43,55 +43,34 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val swipeRefreshLayout: SwipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
+        swipeRefreshLayout.setOnRefreshListener {
+            weightViewModel!!.loadWeights()
+        }
+
+        val floatingActionButton: FloatingActionButton = view.findViewById(R.id.fab)
+        floatingActionButton.setOnClickListener {
+            showAddWeightDialog()
+        }
+
         yearWeek = YearWeek.now()
         yearMonth = YearMonth.now()
-        val swipeRefreshLayout: SwipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
-        swipeRefreshLayout.setOnRefreshListener { weightViewModel!!.loadWeights() }
+
+        adapter = WeightAdapter()
+
         val weightListView = view.findViewById<ListView>(R.id.weight_list_view)
         weightListView.isNestedScrollingEnabled = true
-        val fab: FloatingActionButton = view.findViewById(R.id.fab)
-        fab.setOnClickListener {
-            val input = EditText(context)
-            input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
-            val layoutName = LinearLayout(context)
-            layoutName.orientation = LinearLayout.VERTICAL
-            layoutName.setPadding(60, 0, 60, 0)
-            layoutName.addView(input)
-            val adb = AlertDialog.Builder(
-                context!!
-            )
-            adb.setTitle("Gewicht eingeben")
-            adb.setView(layoutName)
-            adb.setPositiveButton("OK") { _, _ ->
-                val weightString = input.text.toString()
-                if (weightString.isNotEmpty()) {
-                    weightViewModel!!.saveWeight(WeightDto(System.currentTimeMillis(), weightString.toDouble()))
-                }
-            }
-            adb.setNegativeButton("Abbrechen") { dialog, _ -> dialog.cancel() }
-            adb.show()
-        }
-        adapter = WeightAdapter()
         weightListView.adapter = adapter
-        weightListView.onItemLongClickListener =
-            OnItemLongClickListener { _, _, position: Int, _ ->
-                val adb = AlertDialog.Builder(
-                    activity!!
-                )
-                adb.setTitle("Delete?")
-                adb.setMessage("Are you sure you want to delete this entry?")
-                adb.setNegativeButton("Cancel", null)
-                adb.setPositiveButton("Ok") { _, _ ->
-                    weightViewModel!!.deleteWeight(adapter!!.weights[position])
-                    adapter!!.weights.removeAt(position)
-                    adapter!!.notifyDataSetChanged()
-                }
-                adb.show()
-                false
-            }
+        weightListView.onItemLongClickListener = OnItemLongClickListener { _, _, position: Int, _ ->
+            showDeleteWeightDialog(position)
+            false
+        }
+
         val lineChartNavigateBar = view.findViewById<LinearLayout>(R.id.line_chart_navigate_bar)
         val lineChartDescription = view.findViewById<TextView>(R.id.line_chart_description)
         lineChartDescription.text = yearWeek.dayRange
+
         val lineChartWeek = view.findViewById<Button>(R.id.button_chart_week)
         lineChartWeek.setOnClickListener {
             if (displayMode != DisplayMode.WEEK) {
@@ -102,6 +81,7 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
             lineChartNavigateBar.visibility = View.VISIBLE
             setupLineChart()
         }
+
         val lineChartMonth = view.findViewById<Button>(R.id.button_chart_month)
         lineChartMonth.setOnClickListener {
             if (displayMode != DisplayMode.MONTH) {
@@ -112,12 +92,14 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
             lineChartNavigateBar.visibility = View.VISIBLE
             setupLineChart()
         }
+
         val lineChartAll = view.findViewById<Button>(R.id.button_chart_all)
         lineChartAll.setOnClickListener { v: View? ->
             displayMode = DisplayMode.NONE
             lineChartNavigateBar.visibility = View.GONE
             setupLineChartAll()
         }
+
         val lineChartNextImageView = view.findViewById<ImageView>(R.id.line_chart_navigate_next)
         lineChartNextImageView.setOnClickListener {
             if (displayMode == DisplayMode.WEEK) {
@@ -129,6 +111,7 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
             }
             setupLineChart()
         }
+
         val lineChartBeforeImageView = view.findViewById<ImageView>(R.id.line_chart_navigate_before)
         lineChartBeforeImageView.setOnClickListener { v: View? ->
             if (displayMode == DisplayMode.WEEK) {
@@ -140,6 +123,7 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
             }
             setupLineChart()
         }
+
         weightViewModel = ViewModelProvider(this)[WeightViewModel::class.java]
         weightViewModel!!.getWeights().observe(viewLifecycleOwner, { weights: List<WeightDto?>? ->
             adapter!!.setWeights(weights)
@@ -148,6 +132,41 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
         })
         weightViewModel!!.loadWeights()
         lineChart = view.findViewById(R.id.line_chart)
+    }
+
+    private fun showAddWeightDialog() {
+        val input = EditText(context)
+        input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
+
+        val layoutName = LinearLayout(context)
+        layoutName.orientation = LinearLayout.VERTICAL
+        layoutName.setPadding(60, 0, 60, 0)
+        layoutName.addView(input)
+
+        val adb = AlertDialog.Builder(context!!)
+        adb.setTitle("Gewicht eingeben")
+        adb.setView(layoutName)
+        adb.setPositiveButton("OK") { _, _ ->
+            val weightString = input.text.toString()
+            if (weightString.isNotEmpty()) {
+                weightViewModel!!.saveWeight(WeightDto(System.currentTimeMillis(), weightString.toDouble()))
+            }
+        }
+        adb.setNegativeButton("Abbrechen") { dialog, _ -> dialog.cancel() }
+        adb.show()
+    }
+
+    private fun showDeleteWeightDialog(position: Int) {
+        val adb = AlertDialog.Builder(activity!!)
+        adb.setTitle("Delete?")
+        adb.setMessage("Are you sure you want to delete this entry?")
+        adb.setNegativeButton("Cancel", null)
+        adb.setPositiveButton("Ok") { _, _ ->
+            weightViewModel!!.deleteWeight(adapter!!.weights[position])
+            adapter!!.weights.removeAt(position)
+            adapter!!.notifyDataSetChanged()
+        }
+        adb.show()
     }
 
     private fun setupLineChart() {
