@@ -198,20 +198,10 @@ class WeightGraphView @JvmOverloads constructor(
     private fun setupLineChartMonth(yearMonth: YearMonth) {
         weights.sort()
         val yVals = ArrayList<Entry>()
-        for (i in weights.indices) {
-            val dto = weights[i]
-            if (dto.month == yearMonth.month.value && dto.year == yearMonth.year) {
-                if (i - 1 >= 0 && yVals.size == 0) {
-                    yVals.add(Entry(0f, weights[i - 1].weightInKgs.toFloat()))
-                }
-                yVals.add(Entry(dto.dayInMonth.toFloat(), dto.weightInKgs.toFloat()))
-                if (weights.size >= i + 1 && yVals.size == 28) {
-                    yVals.add(Entry(7f, weights[i + 1].weightInKgs.toFloat()))
-                }
-            }
-        }
+        weights.filter { it.year == yearMonth.year && it.month == yearMonth.month.value }
+            .forEach { yVals.add(Entry(it.dayInMonth.toFloat(), it.weightInKgs.toFloat())) }
+        yVals.sortWith { e1: Entry, e2: Entry -> (e1.x - e2.x).toInt() }
 
-        // yVals.sort((e1, e2) -> (int) (e1.getX() - e2.getX()));
         val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.granularity = 5f

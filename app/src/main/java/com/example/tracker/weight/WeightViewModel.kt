@@ -7,9 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import com.example.tracker.weight.FirestoreWeightRepository.from
 import com.example.tracker.weight.FirestoreWeightRepository.getId
 import com.example.tracker.weight.FirestoreWeightRepository.toMap
-import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import java.util.ArrayList
 import java.util.Collections
 
@@ -39,15 +37,13 @@ class WeightViewModel(application: Application) : AndroidViewModel(application) 
     fun loadWeights() {
         db.collection(FIRESTORE_COLLECTION_WEIGHTS)
             .get()
-            .addOnCompleteListener { task: Task<QuerySnapshot> ->
-                if (task.isSuccessful) {
-                    weightDtos.clear()
-                    for (document in task.result!!) {
-                        weightDtos.add(from(document))
-                    }
-                    weightDtos.sortWith(Collections.reverseOrder())
-                    weights.value = weightDtos
+            .addOnSuccessListener { result ->
+                weightDtos.clear()
+                for (document in result) {
+                    weightDtos.add(from(document))
                 }
+                weightDtos.sortWith(Collections.reverseOrder())
+                weights.value = weightDtos
             }
     }
 
