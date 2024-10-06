@@ -123,15 +123,9 @@ class WeightGraphView @JvmOverloads constructor(
 
     private fun setupLineChart() {
         when (displayMode) {
-            DisplayMode.WEEK -> {
-                setupLineChartWeek(yearWeek)
-            }
-            DisplayMode.MONTH -> {
-                setupLineChartMonth(yearMonth)
-            }
-            DisplayMode.NONE -> {
-                setupLineChartAll()
-            }
+            DisplayMode.WEEK -> setupLineChartWeek(yearWeek)
+            DisplayMode.MONTH -> setupLineChartMonth(yearMonth)
+            DisplayMode.NONE -> setupLineChartAll()
         }
         weights.sortWith(Comparator.reverseOrder())
     }
@@ -154,61 +148,48 @@ class WeightGraphView @JvmOverloads constructor(
 
         val yVals = ArrayList<Entry>()
         weights.sort()
-        var hasBefore = false
-        for (i in weights.indices) {
-            val dto = weights[i]
-            if (dto.week == yearWeek.week && dto.year == yearWeek.year) {
-                if (i > 0 && yVals.size == 0) {
-                    yVals.add(Entry(-1f, weights[i - 1].weightInKgs.toFloat()))
-                    hasBefore = true
-                }
-                yVals.add(
-                    Entry(dto.dayOfWeek.toFloat(), dto.weightInKgs.toFloat())
-                )
-                if (weights.size > i + 1 && yVals.size == (if (hasBefore) 8 else 7)) {
-                    val dto2 = weights[i + 1]
-                    yVals.add(Entry(7f, dto2.weightInKgs.toFloat()))
-                }
-            }
-        }
+        // Add value for sunday last week
+        weights.find { it.year == yearWeek.year && it.week == yearWeek.week - 1 && it.dayOfWeek == 6 }
+            ?.let { yVals.add(Entry(-1f, it.weightInKgs.toFloat())) }
+        // Add current week values
+        weights.filter { it.year == yearWeek.year && it.week == yearWeek.week }
+            .forEachIndexed { index, weight -> yVals.add(Entry(index.toFloat(), weight.weightInKgs.toFloat())) }
+        // Add value for monday next week
+        weights.find { it.year == yearWeek.year && it.week == yearWeek.week + 1 && it.dayOfWeek == 0 }
+            ?.let { yVals.add(Entry(7f, it.weightInKgs.toFloat())) }
         weights.sortWith(Collections.reverseOrder())
         yVals.sortWith { e1: Entry, e2: Entry -> (e1.x - e2.x).toInt() }
 
         val dataSet = LineDataSet(yVals, "Weights")
-        // dataSet.setDrawCircles(false);
         dataSet.circleRadius = 3f
         dataSet.setDrawCircleHole(false)
         dataSet.lineWidth = 2f
-        dataSet.setDrawValues(false)
+        dataSet.setDrawValues(true)
         dataSet.mode = LineDataSet.Mode.CUBIC_BEZIER // For smooth curve
         dataSet.setDrawFilled(true)
         val drawable = ContextCompat.getDrawable(context!!, R.drawable.gradient_linechart_background)
         dataSet.fillDrawable = drawable
 
-        // dataSet.setFillAlpha(0);
-        val lineData = LineData(dataSet)
-        // lineChart.setXAxisRenderer();
+        val weightsCurrentWeek = weights
+            .filter { it.week == yearWeek.week && it.year == yearWeek.year }
+            .map { it.weightInKgs.toFloat() }
+        val minWeight = (weightsCurrentWeek.minOrNull() ?: 0f).toInt().toFloat()
+        val maxWeight = ((weightsCurrentWeek.maxOrNull() ?: 100f).toInt() + 1).toFloat()
 
         val leftAxis = lineChart.axisLeft
         leftAxis.setDrawAxisLine(false)
         leftAxis.granularity = 1f
-        // leftAxis.setAxisMinimum(lineData.getYMin() - 0.25f);
-        // leftAxis.setAxisMaximum(lineData.getYMax() + 0.25f);
-        val minWeight = weights.map { it.weightInKgs.toFloat() }.minOrNull() ?: 0f
-        val maxWeight = weights.map { it.weightInKgs.toFloat() }.maxOrNull() ?: 100f
-        leftAxis.axisMinimum = minWeight - 0.25f
-        leftAxis.axisMaximum = maxWeight + 0.25f
+        leftAxis.axisMinimum = minWeight
+        leftAxis.axisMaximum = maxWeight
 
         val rightAxis = lineChart.axisRight
         rightAxis.setDrawAxisLine(false)
         rightAxis.setDrawLabels(false)
         rightAxis.setDrawGridLines(false)
-        // rightAxis.setAxisLineWidth(0);
-        // rightAxis.setXOffset(-5f);
 
         lineChart.description.isEnabled = false
         lineChart.legend.isEnabled = false
-        lineChart.data = lineData
+        lineChart.data = LineData(dataSet)
         lineChart.setTouchEnabled(false)
         lineChart.invalidate() // So the chart refreshes and you don't have to click it
         lineChart.setExtraOffsets(5f, 10f, 0f, 10f)

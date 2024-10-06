@@ -1,7 +1,6 @@
 package com.example.tracker.weight
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -27,32 +26,17 @@ class WeightViewModel(application: Application) : AndroidViewModel(application) 
     fun deleteWeight(dto: WeightDto) {
         weightDtos.remove(dto)
         weights.value = weightDtos
-        db.collection(FIRESTORE_COLLECTION_WEIGHTS).document(getId(dto))
-            .delete()
-            .addOnSuccessListener {
-                Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot successfully deleted!")
-            }
-            .addOnFailureListener {
-                Log.w(FIRESTORE_LOG_TAG, "Error deleting document", it)
-            }
+        db.collection(FIRESTORE_COLLECTION_WEIGHTS).document(getId(dto)).delete()
     }
 
     fun saveWeight(dto: WeightDto) {
         weightDtos.add(dto)
         weightDtos.sortWith(Collections.reverseOrder())
         weights.value = weightDtos
-        db.collection(FIRESTORE_COLLECTION_WEIGHTS).document(getId(dto))
-            .set(toMap(dto))
-            .addOnSuccessListener { o: Void? ->
-                Log.d(FIRESTORE_LOG_TAG, "DocumentSnapshot added with ID: " + getId(dto))
-            }
-            .addOnFailureListener { e: Exception? ->
-                Log.w(FIRESTORE_LOG_TAG, "Error adding document", e)
-            }
+        db.collection(FIRESTORE_COLLECTION_WEIGHTS).document(getId(dto)).set(toMap(dto))
     }
 
     fun loadWeights() {
-//        weights.setValue(restRepository.loadWeights());
         db.collection(FIRESTORE_COLLECTION_WEIGHTS)
             .get()
             .addOnCompleteListener { task: Task<QuerySnapshot> ->
@@ -60,18 +44,14 @@ class WeightViewModel(application: Application) : AndroidViewModel(application) 
                     weightDtos.clear()
                     for (document in task.result!!) {
                         weightDtos.add(from(document))
-                        Log.d(FIRESTORE_LOG_TAG, document.id + " => " + document.data)
                     }
                     weightDtos.sortWith(Collections.reverseOrder())
-                    weights.setValue(weightDtos)
-                } else {
-                    Log.w(FIRESTORE_LOG_TAG, "Error getting documents.", task.exception)
+                    weights.value = weightDtos
                 }
             }
     }
 
     companion object {
-        private const val FIRESTORE_LOG_TAG = "Firestore"
         private const val FIRESTORE_COLLECTION_WEIGHTS = "weights"
     }
 }

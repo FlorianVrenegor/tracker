@@ -14,12 +14,13 @@ class WeightDto(val timeInMillis: Long, weightInKgs: Double) : Comparable<Weight
     val date: String
     val weightInKgs: Double
 
-    // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+    // calculates dayOf Week, monday = 0, sunday = 6
     val dayOfWeek: Int
         get() {
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = timeInMillis
-            return (calendar[Calendar.DAY_OF_WEEK] + 5) % 7 // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+            // because for some reason monday, the first day of the week, gets a 2, saturday is 7
+            return (calendar[Calendar.DAY_OF_WEEK] + 5) % 7
         }
 
     val weightString: String

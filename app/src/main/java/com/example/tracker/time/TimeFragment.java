@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,9 +25,6 @@ import com.example.tracker.R;
 import java.util.Locale;
 
 public class TimeFragment extends Fragment {
-
-    private final String TIME_TAG = "TIME";
-
     private boolean running = false;
 
     private CountDownTimer timer;
@@ -91,7 +87,6 @@ public class TimeFragment extends Fragment {
         timeViewModel = new ViewModelProvider(this).get(TimeViewModel.class);
         timeViewModel.getAllTimeBoxes().observe(getViewLifecycleOwner(), timeBoxes -> {
             adapter.submitList(timeBoxes);
-            Log.d(TIME_TAG, "Total completed: " + timeBoxes.size());
         });
     }
 
@@ -111,7 +106,6 @@ public class TimeFragment extends Fragment {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + milliseconds, pendingIntent);
 
             timer = new CountDownTimer(milliseconds, 1000) {
-
                 public void onTick(long millisUntilFinished) {
                     long seconds = millisUntilFinished / 1000;
                     long minutes = seconds / 60;
@@ -127,7 +121,6 @@ public class TimeFragment extends Fragment {
 
                 public void onFinish() {
                     String task = timerEditText.getText().toString();
-                    Log.d(TIME_TAG, "Task '" + task + "', started at: " + timerStartedInMillis + " with duration " + milliseconds + ", finished.");
                     // Add the timeBox to the room database
                     timeViewModel.insert(new TimeBoxDto(timerStartedInMillis, milliseconds, task));
 
