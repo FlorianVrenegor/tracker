@@ -18,6 +18,7 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
 
     private var adapter: WeightAdapter? = null
     private var weightViewModel: WeightViewModel? = null
+    private lateinit var lineChartView: LineChartView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -48,6 +49,12 @@ class WeightFragment : Fragment(R.layout.fragment_weight) {
             swipeRefreshLayout.isRefreshing = false
         })
         weightViewModel!!.loadWeights()
+
+        // Find the custom LineChartView
+        lineChartView = view.findViewById(R.id.lineChart)
+
+        // Example data points
+        lineChartView.setDataPoints(listOf(10f, 20f, 15f, 25f, 30f, 20f, 40f))
     }
 
     private fun showAddWeightDialog() {
